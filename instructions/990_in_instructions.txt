@@ -1,0 +1,57 @@
+{
+    "__edi": {
+        "companyName": "Test Company",
+        "interchangeSenderId": "TT",
+        "interchangeReceiverId": "TTXG",
+        "elementTerminator": "*",
+        "segmentTerminator": "\n"
+    },
+    "B1": {
+        "type": "line",
+        "elements": [
+            {
+                "name": "B101",
+                "description": "SCAC - Standard Carrier Alpha Code",
+                "type": "toJson",
+                "path": "scac"
+            },
+            {
+                "name": "B102",
+                "description": "RoseRocket Order Full ID",
+                "type": "toJson",
+                "path": "full_id"
+            },
+            {
+                "name": "B103",
+                "description": "Date",
+                "type": "toJson",
+                "path": "date"
+            },
+            {
+                "name": "B104",
+                "description": "Reservation Action Code - A or D, 'Accepted' or 'Cancelled'",
+                "type": "toJson",
+                "path": "action_code"
+            }
+        ]
+    },
+    "N9": {
+        "type": "line",
+        "elements": [
+            {
+                "name": "N901",
+                "description": "ID Qualifier - I5(invoice#) or CN(Carrier#) -- Should always be CN",
+                "type": "toJson",
+                "path": "id_qualifier"
+            },
+            {
+                "name": "N902",
+                "description": "APPS Transport Reference ID",
+                "type": "toJson",
+                "path": "external_id"
+            }
+        ]
+    },
+    "N7": { "type": "skipLine" },
+    "S5": { "type": "skipLine" }
+}
