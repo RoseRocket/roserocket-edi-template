@@ -31,6 +31,11 @@ The naming convention for instructions should match the following
 204_out_instructions.txt <===== reading JSON data and converting it into an EDI file
 ```
 
+A basic set of instructions (currently incomplete) for assembling your company instructions can be found in the file:
+EDI_Library.md
+
+Please review this resource.
+
 ## How to build:
 
 1.  Install Node
