@@ -1,0 +1,294 @@
+{
+    "__edi": {
+        "companyName": "Test Company",
+        "interchangeSenderId": "TT",
+        "interchangeReceiverId": "TTXG",
+        "elementTerminator": "*",
+        "segmentTerminator": "\n"
+    },
+    "B2": { "type": "skipLine" },
+    "B2A": { "type": "skipLine" },
+    "N1": { "type": "skipLine" },
+    "N3": { "type": "skipLine" },
+    "N4": { "type": "skipLine" },
+    "LX": { "type": "skipLine" },
+    "AT8": { "type": "skipLine" },
+    "MS1": { "type": "skipLine" },
+    "MS2": { "type": "skipLine" },
+    "AT7": {
+        "type":"line",
+        "elements": [
+            {
+                "name": "AT701",
+                "description": "Shipment Status Code",
+                "type": "toJson",
+                "path": "status_code"
+            },
+            {
+                "name": "AT702",
+                "description": "Shipment Status or Appointment Reason Code (for 'Shipment Status Code')",
+                "type": "toJson",
+                "path": "at701_status_or_appointment_reason"
+            },
+            {
+                "name": "AT703",
+                "description": "Shipment Appointment Status Code",
+                "type": "toJson",
+                "path": "appointment_code"
+            },
+            {
+                "name": "AT704",
+                "description": "Shipment Status or Appointment Reason Code (for 'Shipment Appointment Status Code')",
+                "type": "toJson",
+                "path": "at703_status_or_appointment_reason"
+            },
+            {
+                "name": "AT705",
+                "description": "Date",
+                "type": "toJson",
+                "path": "date"
+            },
+            {
+                "name": "AT706",
+                "description": "Time",
+                "type": "toJson",
+                "path": "time"
+            },
+            {
+                "name": "AT707",
+                "description": "TimeCode",
+                "type": "toJson",
+                "path": "time_code"
+            }
+        ]
+    },
+    "B10": {
+        "type":"line",
+        "elements": [
+            {
+                "name": "B1001",
+                "description": "Apps Transport ID",
+                "type": "toJson",
+                "path": "external_id"
+            },
+            {
+                "name": "B1002",
+                "description": "RoseRocket Order Full ID",
+                "type": "toJson",
+                "path": "full_id"
+            },
+            {
+                "name": "B1003",
+                "description": "SCAC",
+                "type": "toJson",
+                "path": "scac"
+            }
+        ]
+    },
+    "L11": { "type": "skipLine" },
+    "G62": {
+        "type": "line",
+        "elements": [
+            {
+                "name": "G6201",
+                "description": "Date Qualifier.",
+                "type": "mapping",
+                "path": "$tempVarName",
+                "matching": {
+                    "64": "ready_time"
+                },
+                "defaultValue": "ERROR"
+            },
+            {
+                "name": "G6202",
+                "description": "Date",
+                "type": "toJsonDateTime",
+                "varPath": "$tempVarName",
+                "dateTimeFormat": "YYYYMMDD"
+            },
+            {
+                "name": "G6203",
+                "description": "Time Specified",
+                "type": "skipElement"
+            },
+            {
+                "name": "G6204",
+                "description": "Time",
+                "type": "toJsonDateTime",
+                "varPath": "$tempVarName",
+                "combinedTime": true,
+                "dateTimeFormat": "HHmm"
+            },
+            {
+                "name": "G6205",
+                "description": "Time Zone",
+                "type": "mapping",
+                "path": "timeZone",
+                "matching": {
+                    "ET": "eastern"
+                },
+                "defaultValue": "ERROR"
+            }
+        ]
+    },
+    "AT5": { "type": "skipLine" },
+    "NTE": { "type": "skipLine" },
+    "S5": {
+        "type": "loopBlock",
+        "arrayName": "stops",
+        "instructions": {
+            "S5": {
+                "type": "line",
+                "elements": [
+                    {
+                        "name": "S501",
+                        "description": "Stop Sequence Number",
+                        "type": "toJson",
+                        "path": "stopSequenceNumber"
+                    },
+                    {
+                        "name": "S502",
+                        "description": "Stop Reason Code",
+                        "type": "toJson",
+                        "path": "stopReasonCode"
+                    }
+                ]
+            },
+            "G62": { "type": "skipLine" },
+            "N1": {
+                "type": "loopBlock",
+                "arrayName": "addresses",
+                "instructions": {
+                    "N1": {
+                        "type": "line",
+                        "elements": [
+                            {
+                                "name": "N101",
+                                "description": "Entity Identifier Code",
+                                "type": "skipElement"
+                            },
+                            {
+                                "name": "N102",
+                                "description": "Name",
+                                "type": "toJson",
+                                "path": "org_name"
+                            },
+                            {
+                                "name": "N103",
+                                "description": "Identification Code Qualifier",
+                                "type": "skipElement"
+                            },
+                            {
+                                "name": "N104",
+                                "description": "Identification Code",
+                                "type": "skipElement"
+                            }
+                        ]
+                    },
+                    "N3": {
+                        "type": "line",
+                        "elements": [
+                            {
+                                "name": "N301",
+                                "description": "Address Information",
+                                "type": "toJson",
+                                "path": "address"
+                            }
+                        ]
+                    },
+                    "N4": {
+                        "type": "line",
+                        "elements": [
+                            {
+                                "name": "N401",
+                                "description": "City Name",
+                                "type": "toJson",
+                                "path": "city"
+                            },
+                            {
+                                "name": "N402",
+                                "description": "State or Province Code",
+                                "type": "toJson",
+                                "path": "state"
+                            },
+                            {
+                                "name": "N403",
+                                "description": "Postal Code",
+                                "type": "toJson",
+                                "path": "postal"
+                            },
+                            {
+                                "name": "N404",
+                                "description": "Country Code",
+                                "type": "toJson",
+                                "path": "country"
+                            }
+                        ]
+                    }
+                }
+            },
+            "G61": {
+                "type": "line",
+                "elements": [
+                    {
+                        "name": "G6101",
+                        "description": "Contact Function Code",
+                        "type": "skipElement"
+                    },
+                    {
+                        "name": "G6102",
+                        "description": "Name",
+                        "type": "toJson",
+                        "path": "contactName"
+                    },
+                    {
+                        "name": "G6103",
+                        "description": "Communication Number Qualifier",
+                        "type": "skipElement"
+                    },
+                    {
+                        "name": "G6104",
+                        "description": "Communication Number",
+                        "type": "toJson",
+                        "path": "contactNumber"
+                    }
+                ]
+            },
+            "L5": {
+                "type": "loopBlock",
+                "arrayName": "commodities",
+                "instructions": {
+                    "L5": {
+                        "type": "line",
+                        "elements": [
+                            {
+                                "name": "L501",
+                                "description": "Index",
+                                "type": "toJson",
+                                "path": "id"
+                            },
+                            {
+                                "name": "L502",
+                                "description": "PON",
+                                "type": "toJson",
+                                "path": "description"
+                            },
+                            {
+                                "name": "L503",
+                                "description": "NMFC",
+                                "type": "toJson",
+                                "path": "nmfc"
+                            },
+                            {
+                                "name": "L504",
+                                "description": "Country Code",
+                                "type": "skipElement"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "L3": { "type": "skipLine" }
+}

@@ -1,0 +1,1069 @@
+{
+    "type": "edi",
+    "description": "EDI File",
+    "elements": [
+        {
+            "type": "ediGroup",
+            "description": "EDI Group",
+            "elements": [
+                {
+                    "description": "Orders Loop",
+                    "type": "loopBlock",
+                    "path": "orders",
+                    "itemName": "order",
+                    "elements": [
+                        {
+                            "type": "ediOrder",
+                            "description": "EDI Order",
+                            "elements": [
+                                {
+                                    "description": "Order Block",
+                                    "type": "block",
+                                    "elements": [
+                                        {
+                                            "segmentIdentifier": "B2",
+                                            "description": "Beginning Segment for Shipment. Information Transaction",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "B201",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "B202",
+                                                    "description": "Standard Carrier Alpha Code",
+                                                    "type": "fromJson",
+                                                    "path": "__edi.interchangeReceiverId",
+                                                    "minLength": 2,
+                                                    "maxLength": 4
+                                                },
+                                                {
+                                                    "name": "B203",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "B204",
+                                                    "description": "Shipment Identification Number",
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.customer.short_code",
+                                                    "minLength": 1,
+                                                    "maxLength": 30
+                                                },
+                                                {
+                                                    "name": "B205",
+                                                    "description": "@TOASK",
+                                                    "type": "value",
+                                                    "value": "L",
+                                                    "minLength": 1,
+                                                    "maxLength": 1
+                                                },
+                                                {
+                                                    "name": "B206",
+                                                    "description": "Shipment Method of Payment",
+                                                    "type": "ifCase",
+                                                    "ifFunc": {
+                                                        "type": "isEqual",
+                                                        "args": [
+                                                            {
+                                                                "type": "fromJson",
+                                                                "path": "order.__value.billing_option"
+                                                            },
+                                                            "PP"
+                                                        ]
+                                                    },
+                                                    "trueCase": "PP",
+                                                    "falseCase": "CC",
+                                                    "minLength": 2,
+                                                    "maxLength": 2
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "B2A",
+                                            "description": "Set Purpose",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "B2A01",
+                                                    "description": "Transaction Set Purpose Code",
+                                                    "type": "value",
+                                                    "value": "00",
+                                                    "minLength": 2,
+                                                    "maxLength": 2
+                                                },
+                                                {
+                                                    "name": "B2A02",
+                                                    "description": "Application Type",
+                                                    "type": "value",
+                                                    "value": "BL",
+                                                    "minLength": 2,
+                                                    "maxLength": 2
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "L11",
+                                            "description": "Business Instructions and Reference >1 Number",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "L1101",
+                                                    "description": "Reference Identification - We can use po_num or tender_num",
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.po_num",
+                                                    "minLength": 1,
+                                                    "maxLength": 30
+                                                },
+                                                {
+                                                    "name": "L1102",
+                                                    "description": "Reference Identification Qualifier",
+                                                    "type": "value",
+                                                    "value": "BL",
+                                                    "minLength": 2,
+                                                    "maxLength": 3
+                                                },
+                                                {
+                                                    "name": "L1103",
+                                                    "description": "Description",
+                                                    "type": "empty",
+                                                    "minLength": 1,
+                                                    "maxLength": 80
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "G62",
+                                            "description": "Date/Time of order",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "G6201",
+                                                    "description": "Date Qualifier.",
+                                                    "type": "value",
+                                                    "value": "64",
+                                                    "minLength": 2,
+                                                    "maxLength": 2
+                                                },
+                                                {
+                                                    "name": "G6202",
+                                                    "description": "Date",
+                                                    "type": "fromJson",
+                                                    "path": "__vars.respondBy",
+                                                    "dateTimeFormat": "YYYYMMDD",
+                                                    "minLength": 8,
+                                                    "maxLength": 8
+                                                },
+                                                {
+                                                    "name": "G6203",
+                                                    "description": "Time Specified",
+                                                    "type": "value",
+                                                    "value": "1",
+                                                    "minLength": 1,
+                                                    "maxLength": 2
+                                                },
+                                                {
+                                                    "name": "G6204",
+                                                    "description": "Time",
+                                                    "type": "fromJson",
+                                                    "path": "__vars.respondBy",
+                                                    "dateTimeFormat": "HHmm",
+                                                    "minLength": 4,
+                                                    "maxLength": 8
+                                                },
+                                                {
+                                                    "name": "G6205",
+                                                    "description": "Time Zone",
+                                                    "type": "value",
+                                                    "value": "ET",
+                                                    "minLength": 2,
+                                                    "maxLength": 2
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "AT5",
+                                            "description": "Bill of Lading Handling Requirements",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "AT501",
+                                                    "description": "Special Handling Code",
+                                                    "type": "value",
+                                                    "value": "LTL",
+                                                    "minLength": 2,
+                                                    "maxLength": 3
+                                                },
+                                                {
+                                                    "name": "AT502",
+                                                    "description": "Special Services Code",
+                                                    "type": "empty",
+                                                    "minLength": 2,
+                                                    "maxLength": 10
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "NTE",
+                                            "description": "Note/Special Instruction",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "NTE01",
+                                                    "description": "Note Reference Code",
+                                                    "type": "value",
+                                                    "value": "SPH",
+                                                    "minLength": 3,
+                                                    "maxLength": 3
+                                                },
+                                                {
+                                                    "name": "NTE02",
+                                                    "description": "Free Form Description",
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.notes",
+                                                    "minLength": 1,
+                                                    "maxLength": 80
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "description": "Stops Block",
+                                            "type": "block",
+                                            "elements": [
+                                                {
+                                                    "description": "Stops Block",
+                                                    "type": "block",
+                                                    "elements": [
+                                                        {
+                                                            "segmentIdentifier": "S5",
+                                                            "description": "Stop Off Details",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "S501",
+                                                                    "description": "Stop Sequence Number",
+                                                                    "type": "value",
+                                                                    "value": "1",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 3
+                                                                },
+                                                                {
+                                                                    "name": "S502",
+                                                                    "description": "Stop Reason Code",
+                                                                    "type": "value",
+                                                                    "value": "LD",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "G62",
+                                                            "description": "Stop Start Date/Time",
+                                                            "type": "ifCase",
+                                                            "ifFunc": {
+                                                                "type": "fromJson",
+                                                                "path": "order.__value.pickup_appt_start_at"
+                                                            },
+                                                            "trueCase": {
+                                                                "segmentIdentifier": "G62",
+                                                                "description": "Date/Time of stop Start",
+                                                                "type": "line",
+                                                                "elements": [
+                                                                    {
+                                                                        "name": "G6201",
+                                                                        "description": "Date Qualifier.",
+                                                                        "type": "value",
+                                                                        "value": "69",
+                                                                        "minLength": 2,
+                                                                        "maxLength": 2
+                                                                    },
+                                                                    {
+                                                                        "name": "G6202",
+                                                                        "description": "Date",
+                                                                        "type": "fromJson",
+                                                                        "path": "order.__value.pickup_appt_start_at",
+                                                                        "dateTimeFormat": "YYYYMMDD",
+                                                                        "minLength": 8,
+                                                                        "maxLength": 8
+                                                                    },
+                                                                    {
+                                                                        "name": "G6203",
+                                                                        "description": "Time Specified",
+                                                                        "type": "value",
+                                                                        "value": "U",
+                                                                        "minLength": 1,
+                                                                        "maxLength": 1
+                                                                    },
+                                                                    {
+                                                                        "name": "G6204",
+                                                                        "description": "Time",
+                                                                        "type": "fromJson",
+                                                                        "path": "order.__value.pickup_appt_start_at",
+                                                                        "dateTimeFormat": "HHmm",
+                                                                        "minLength": 4,
+                                                                        "maxLength": 8
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "falseCase": {
+                                                                "type": "block",
+                                                                "elements": [
+                                                                    {
+                                                                        "segmentIdentifier": "G62",
+                                                                        "type": "line",
+                                                                        "elements": [
+                                                                            {
+                                                                                "name": "G6201",
+                                                                                "description": "Date Qualifier",
+                                                                                "type": "value",
+                                                                                "value": "37",
+                                                                                "minLength": 2,
+                                                                                "maxLength": 2
+                                                                            },
+                                                                            {
+                                                                                "name": "G6202",
+                                                                                "description": "Date",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.pickup_start_at",
+                                                                                "dateTimeFormat": "YYYYMMDD",
+                                                                                "minLength": 8,
+                                                                                "maxLength": 8
+                                                                            },
+                                                                            {
+                                                                                "name": "G6203",
+                                                                                "description": "Time Specified",
+                                                                                "type": "value",
+                                                                                "value": "I",
+                                                                                "minLength": 1,
+                                                                                "maxLength": 1
+                                                                            },
+                                                                            {
+                                                                                "name": "G6204",
+                                                                                "description": "Time",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.pickup_start_at",
+                                                                                "dateTimeFormat": "HHmm",
+                                                                                "minLength": 4,
+                                                                                "maxLength": 8
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "segmentIdentifier": "G62",
+                                                                        "type": "ifLine",
+                                                                        "ifFunc": {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.pickup_end_at"
+                                                                        },
+                                                                        "elements": [
+                                                                            {
+                                                                                "name": "G6201",
+                                                                                "description": "Date Qualifier",
+                                                                                "type": "value",
+                                                                                "value": "38",
+                                                                                "minLength": 2,
+                                                                                "maxLength": 2
+                                                                            },
+                                                                            {
+                                                                                "name": "G6202",
+                                                                                "description": "Date",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.pickup_end_at",
+                                                                                "dateTimeFormat": "YYYYMMDD",
+                                                                                "minLength": 8,
+                                                                                "maxLength": 8
+                                                                            },
+                                                                            {
+                                                                                "name": "G6203",
+                                                                                "description": "Time Specified",
+                                                                                "type": "value",
+                                                                                "value": "K",
+                                                                                "minLength": 1,
+                                                                                "maxLength": 1
+                                                                            },
+                                                                            {
+                                                                                "name": "G6204",
+                                                                                "description": "Time",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.pickup_end_at",
+                                                                                "dateTimeFormat": "HHmm",
+                                                                                "minLength": 4,
+                                                                                "maxLength": 8
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N1",
+                                                            "description": "Shipper Name",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N101",
+                                                                    "description": "Entity Identifier Code",
+                                                                    "type": "value",
+                                                                    "value": "SF",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 3
+                                                                },
+                                                                {
+                                                                    "name": "N102",
+                                                                    "description": "Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.org_name",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 60
+                                                                },
+                                                                {
+                                                                    "name": "N103",
+                                                                    "description": "Identification Code Qualifier",
+                                                                    "type": "value",
+                                                                    "value": "93",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "N104",
+                                                                    "description": "Identification Code",
+                                                                    "type": "empty",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 80
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N3",
+                                                            "description": "Shipper Address Information",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N301",
+                                                                    "description": "Address Information",
+                                                                    "type": "concat",
+                                                                    "separator": " ",
+                                                                    "args": [
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.origin.address_1"
+                                                                        },
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.origin.address_2"
+                                                                        }
+                                                                    ],
+                                                                    "minLength": 1,
+                                                                    "maxLength": 55
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N4",
+                                                            "description": "Shipper Geographic Location",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N401",
+                                                                    "description": "City Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.city",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 30
+                                                                },
+                                                                {
+                                                                    "name": "N402",
+                                                                    "description": "State or Province Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.state",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "N403",
+                                                                    "description": "Postal Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.postal",
+                                                                    "minLength": 3,
+                                                                    "maxLength": 15
+                                                                },
+                                                                {
+                                                                    "name": "N404",
+                                                                    "description": "Country Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.country",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 3
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "G61",
+                                                            "description": "Contact",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "G6101",
+                                                                    "description": "Contact Function Code",
+                                                                    "type": "value",
+                                                                    "value": "CO",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "G6102",
+                                                                    "description": "Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.contact_name",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 60
+                                                                },
+                                                                {
+                                                                    "name": "G6103",
+                                                                    "description": "Communication Number Qualifier",
+                                                                    "type": "value",
+                                                                    "value": "TE",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "G6104",
+                                                                    "description": "Communication Number",
+                                                                    "type": "concat",
+                                                                    "separator": " ",
+                                                                    "args": [
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.origin.phone"
+                                                                        },
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.origin.phone_ext"
+                                                                        }
+                                                                    ],
+                                                                    "minLength": 1,
+                                                                    "maxLength": 80
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "description": "Commodities Loop",
+                                                            "type": "loopBlock",
+                                                            "path": "order.__value.commodities",
+                                                            "itemName": "commodity",
+                                                            "elements": [
+                                                                {
+                                                                    "segmentIdentifier": "L5",
+                                                                    "description": "Description, Marks and Numbers",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "L501",
+                                                                            "description": "Index",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__index",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 30
+                                                                        },
+                                                                        {
+                                                                            "name": "L502",
+                                                                            "description": "PON",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.description",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 22
+                                                                        },
+                                                                        {
+                                                                            "name": "L503",
+                                                                            "description": "NMFC",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.nmfc",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 30
+                                                                        },
+                                                                        {
+                                                                            "name": "L504",
+                                                                            "description": "Country Code",
+                                                                            "type": "value",
+                                                                            "value": "N",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 1
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "description": "Stops Block",
+                                                    "type": "block",
+                                                    "elements": [
+                                                        {
+                                                            "segmentIdentifier": "S5",
+                                                            "description": "Stop Off Details",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "S501",
+                                                                    "description": "Stop Sequence Number",
+                                                                    "type": "value",
+                                                                    "value": "2",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 3
+                                                                },
+                                                                {
+                                                                    "name": "S502",
+                                                                    "description": "Stop Reason Code.",
+                                                                    "type": "value",
+                                                                    "value": "UL",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "G62",
+                                                            "description": "Stop End Date/Time",
+                                                            "type": "ifCase",
+                                                            "ifFunc": {
+                                                                "type": "fromJson",
+                                                                "path": "order.__value.delivery_appt_start_at"
+                                                            },
+                                                            "trueCase": {
+                                                                "segmentIdentifier": "G62",
+                                                                "description": "Date/Time of stop Start",
+                                                                "type": "line",
+                                                                "elements": [
+                                                                    {
+                                                                        "name": "G6201",
+                                                                        "description": "Date Qualifier.",
+                                                                        "type": "value",
+                                                                        "value": "70",
+                                                                        "minLength": 2,
+                                                                        "maxLength": 2
+                                                                    },
+                                                                    {
+                                                                        "name": "G6202",
+                                                                        "description": "Date",
+                                                                        "type": "fromJson",
+                                                                        "path": "order.__value.delivery_appt_start_at",
+                                                                        "dateTimeFormat": "YYYYMMDD",
+                                                                        "minLength": 8,
+                                                                        "maxLength": 8
+                                                                    },
+                                                                    {
+                                                                        "name": "G6203",
+                                                                        "description": "Time Specified",
+                                                                        "type": "value",
+                                                                        "value": "X",
+                                                                        "minLength": 1,
+                                                                        "maxLength": 1
+                                                                    },
+                                                                    {
+                                                                        "name": "G6204",
+                                                                        "description": "Time",
+                                                                        "type": "fromJson",
+                                                                        "path": "order.__value.delivery_appt_start_at",
+                                                                        "dateTimeFormat": "HHmm",
+                                                                        "minLength": 4,
+                                                                        "maxLength": 8
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "falseCase": {
+                                                                "type": "block",
+                                                                "elements": [
+                                                                    {
+                                                                        "segmentIdentifier": "G62",
+                                                                        "type": "ifLine",
+                                                                        "ifFunc": {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.delivery_start_at"
+                                                                        },
+                                                                        "elements": [
+                                                                            {
+                                                                                "name": "G6201",
+                                                                                "description": "Date Qualifier",
+                                                                                "type": "value",
+                                                                                "value": "53",
+                                                                                "minLength": 2,
+                                                                                "maxLength": 2
+                                                                            },
+                                                                            {
+                                                                                "name": "G6202",
+                                                                                "description": "Date",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.delivery_start_at",
+                                                                                "dateTimeFormat": "YYYYMMDD",
+                                                                                "minLength": 8,
+                                                                                "maxLength": 8
+                                                                            },
+                                                                            {
+                                                                                "name": "G6203",
+                                                                                "description": "Time Specified",
+                                                                                "type": "value",
+                                                                                "value": "G",
+                                                                                "minLength": 1,
+                                                                                "maxLength": 1
+                                                                            },
+                                                                            {
+                                                                                "name": "G6204",
+                                                                                "description": "Time",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.delivery_start_at",
+                                                                                "dateTimeFormat": "HHmm",
+                                                                                "minLength": 4,
+                                                                                "maxLength": 8
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "segmentIdentifier": "G62",
+                                                                        "type": "ifLine",
+                                                                        "ifFunc": {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.delivery_end_at"
+                                                                        },
+                                                                        "elements": [
+                                                                            {
+                                                                                "name": "G6201",
+                                                                                "description": "Date Qualifier",
+                                                                                "type": "value",
+                                                                                "value": "54",
+                                                                                "minLength": 2,
+                                                                                "maxLength": 2
+                                                                            },
+                                                                            {
+                                                                                "name": "G6202",
+                                                                                "description": "Date",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.delivery_end_at",
+                                                                                "dateTimeFormat": "YYYYMMDD",
+                                                                                "minLength": 8,
+                                                                                "maxLength": 8
+                                                                            },
+                                                                            {
+                                                                                "name": "G6203",
+                                                                                "description": "Time Specified",
+                                                                                "type": "value",
+                                                                                "value": "L",
+                                                                                "minLength": 1,
+                                                                                "maxLength": 1
+                                                                            },
+                                                                            {
+                                                                                "name": "G6204",
+                                                                                "description": "Time",
+                                                                                "type": "fromJson",
+                                                                                "path": "order.__value.delivery_end_at",
+                                                                                "dateTimeFormat": "HHmm",
+                                                                                "minLength": 4,
+                                                                                "maxLength": 8
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N1",
+                                                            "description": "Shipper Name",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N101",
+                                                                    "description": "Entity Identifier Code",
+                                                                    "type": "value",
+                                                                    "value": "ST",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 3
+                                                                },
+                                                                {
+                                                                    "name": "N102",
+                                                                    "description": "Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.org_name",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 60
+                                                                },
+                                                                {
+                                                                    "name": "N103",
+                                                                    "description": "Identification Code Qualifier",
+                                                                    "type": "value",
+                                                                    "value": "93",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "N104",
+                                                                    "description": "Identification Code",
+                                                                    "type": "empty",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 80
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N3",
+                                                            "description": "Shipper Address Information",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N301",
+                                                                    "description": "Address Information",
+                                                                    "type": "concat",
+                                                                    "separator": " ",
+                                                                    "args": [
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.destination.address_1"
+                                                                        },
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.destination.address_2"
+                                                                        }
+                                                                    ],
+                                                                    "minLength": 1,
+                                                                    "maxLength": 55
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "N4",
+                                                            "description": "Shipper Geographic Location",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "N401",
+                                                                    "description": "City Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.city",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 30
+                                                                },
+                                                                {
+                                                                    "name": "N402",
+                                                                    "description": "State or Province Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.state",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "N403",
+                                                                    "description": "Postal Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.postal",
+                                                                    "minLength": 3,
+                                                                    "maxLength": 15
+                                                                },
+                                                                {
+                                                                    "name": "N404",
+                                                                    "description": "Country Code",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.country",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 3
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "G61",
+                                                            "description": "Contact",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "G6101",
+                                                                    "description": "Contact Function Code",
+                                                                    "type": "value",
+                                                                    "value": "CO",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "G6102",
+                                                                    "description": "Name",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.contact_name",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 60
+                                                                },
+                                                                {
+                                                                    "name": "G6103",
+                                                                    "description": "Communication Number Qualifier",
+                                                                    "type": "value",
+                                                                    "value": "TE",
+                                                                    "minLength": 2,
+                                                                    "maxLength": 2
+                                                                },
+                                                                {
+                                                                    "name": "G6104",
+                                                                    "description": "Communication Number",
+                                                                    "type": "concat",
+                                                                    "separator": " ",
+                                                                    "args": [
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.destination.phone"
+                                                                        },
+                                                                        {
+                                                                            "type": "fromJson",
+                                                                            "path": "order.__value.destination.phone_ext"
+                                                                        }
+                                                                    ],
+                                                                    "minLength": 1,
+                                                                    "maxLength": 80
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "description": "Commodities Loop",
+                                                            "type": "loopBlock",
+                                                            "path": "order.__value.commodities",
+                                                            "itemName": "commodity",
+                                                            "elements": [
+                                                                {
+                                                                    "segmentIdentifier": "L5",
+                                                                    "description": "Description, Marks and Numbers",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "L501",
+                                                                            "description": "Index",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__index",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 30
+                                                                        },
+                                                                        {
+                                                                            "name": "L502",
+                                                                            "description": "PON",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.description",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 22
+                                                                        },
+                                                                        {
+                                                                            "name": "L503",
+                                                                            "description": "NMFC",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.nmfc",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 30
+                                                                        },
+                                                                        {
+                                                                            "name": "L504",
+                                                                            "description": "Country Code",
+                                                                            "type": "value",
+                                                                            "value": "N",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 1
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "L3",
+                                            "description": "Total Weight and Charges",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "L301",
+                                                    "description": "Weight",
+                                                    "type": "sum",
+                                                    "path": "order.__value.commodities",
+                                                    "itemName": "weight",
+                                                    "minLength": 1,
+                                                    "maxLength": 10
+                                                },
+                                                {
+                                                    "name": "L302",
+                                                    "description": "Weight Qualifier",
+                                                    "type": "value",
+                                                    "value": "N",
+                                                    "minLength": 1,
+                                                    "maxLength": 2
+                                                },
+                                                {
+                                                    "name": "L303",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L304",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L305",
+                                                    "description": "Total Charge",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L306",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L307",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L308",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L309",
+                                                    "description": "Total Volume of Pallets",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L310",
+                                                    "description": "Volume Unit Qualifier",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L311",
+                                                    "description": "N/A",
+                                                    "type": "empty"
+                                                },
+                                                {
+                                                    "name": "L312",
+                                                    "description": "Unit Weight Code",
+                                                    "type": "ifCase",
+                                                    "ifFunc": {
+                                                        "type": "isEqual",
+                                                        "args": [
+                                                            {
+                                                                "type": "fromJson",
+                                                                "path": "order.__value.weight_unit_id"
+                                                            },
+                                                            "K"
+                                                        ]
+                                                    },
+                                                    "trueCase": "K",
+                                                    "falseCase": "L",
+                                                    "minLength": 1,
+                                                    "maxLength": 1
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
