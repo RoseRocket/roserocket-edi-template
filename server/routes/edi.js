@@ -83,6 +83,57 @@ export function create204FromRoseRocket(req, res, next) {
     }
 }
 
+// create856FromRoseRocket is a function that creates an EDI 856 (ASN - Advance ship notice) file
+// which will be sent to the desired receiver.
+export function create856FromRoseRocket(req, res, next) {
+    try {
+        let orderID;
+        let error;
+        const { order = {}, order_id } = req.body;
+        const ediType = '856';
+
+        orderID = order.id || order_id;
+        rrAuthenticate()
+            .then((res1 = {}) => {
+                if (!res1.access_token) {
+                    printFuncError(
+                        'create856FromRoseRocket',
+                        'Authorization Failed - Check Org credentials in environment settings.'
+                    );
+                    return;
+                }
+                rrapi
+                    .getOrder(res1.access_token, orderID)
+                    .then(function(res2) {
+                        if (!res2) {
+                            error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
+                            return next({ error });
+                        }
+                        const orders = [res2.order]; // <--- RR integration webhook expects single order requests
+                        const data = generateEdiRequestBody(orders);
+
+                        // generate 204 EDI data for that company
+                        generateEDI(ediType, data)
+                            .then(function(res = {}) {
+                                const { filePath = '', tmpPath = '' } = generateFileNames(
+                                    ediType,
+                                    true
+                                );
+                                sendAndBackupFile(res, filePath, tmpPath);
+                            })
+                            .catch(err => printFuncError('create856FromRoseRocket', err));
+                    })
+                    .catch(err => printFuncError('create856FromRoseRocket', err));
+            })
+            .catch(err => printFuncError('create856FromRoseRocket', err));
+        quickResponse(res);
+        return;
+    } catch (error) {
+        printFuncError('create856FromRoseRocket', error); // print call stack
+        return next({ error: error.toString() });
+    }
+}
+
 // processInboundDataFile will load a data file (stored locally) and attempt to process it,
 // resulting in a tmp file created with the 'official' version created at the configured location
 export function processInboundEDIFile(ediFile, ediType) {
