@@ -154,7 +154,7 @@
                                                             "name": "TD502",
                                                             "description": "N/A",
                                                             "type": "value",
-                                                            "value": "2",
+                                                            "value": "2"
                                                         },
                                                         {
                                                             "name": "TD503",
@@ -215,7 +215,7 @@
                                                             "name": "REF02",
                                                             "description": "TMS Shipment ID (No idea)",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.public_id",
+                                                            "path": "order.__value.public_id"
                                                         }
                                                     ]
                                                 },
@@ -402,7 +402,7 @@
                                                             "maxLength": 3
                                                         },
                                                         {
-                                                            "name": "N405"
+                                                            "name": "N405",
                                                             "description": "Item Code",
                                                             "type": "value",
                                                             "value": "SN"
@@ -411,7 +411,7 @@
                                                             "name": "N406",
                                                             "description": "Shop Number",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.destination.address_book_external_id",
+                                                            "path": "order.__value.destination.address_book_external_id"
                                                         }
                                                     ]
                                                 }
@@ -455,17 +455,17 @@
                                                             "name": "PRF01",
                                                             "description": "PO ID",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.external_id",
+                                                            "path": "order.__value.external_id"
                                                         },
                                                         {
                                                             "name": "PRF02",
                                                             "description": "N/A",
-                                                            "type:"empty"
+                                                            "type": "empty"
                                                         },
                                                         {
                                                             "name": "PRF03",
                                                             "description": "N/A",
-                                                            "type:"empty"
+                                                            "type": "empty"
                                                         },
                                                         {
                                                             "name": "PRF04",
@@ -846,10 +846,7 @@
                                                     "type": "empty"
                                                 }
                                             ]
-                                        },
-                                        {
-
-                                        },
+                                        }
                                     ]
                                 }
                             ]
