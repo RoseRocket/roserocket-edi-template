@@ -39,7 +39,7 @@
                                                     "name": "BSN03",
                                                     "description": "Date",
                                                     "type": "fromJson",
-                                                    "path": "order.__value.pickup_appt_start_at",
+                                                    "path": "order.__value.pickup_start_at",
                                                     "dateTimeFormat": "YYYYMMDD",
                                                     "minLength": 8,
                                                     "maxLength": 8
@@ -48,7 +48,7 @@
                                                     "name": "BSN04",
                                                     "description": "Time",
                                                     "type": "fromJson",
-                                                    "path": "order.__value.pickup_appt_start_at",
+                                                    "path": "order.__value.pickup_start_at",
                                                     "dateTimeFormat": "HHmm",
                                                     "minLength": 4,
                                                     "maxLength": 8
@@ -671,7 +671,7 @@
                                                                 {
                                                                     "name": "LIN07",
                                                                     "description": "NO IDEA (Home depot part # ?)",
-                                                                    "type": "value",
+                                                                    "type": "fromJson",
                                                                     "path": "commodity.__value.nmfc"
                                                                 }
                                                             ]
@@ -813,35 +813,13 @@
                                             "type": "line",
                                             "elements": [
                                                 {
-                                                    "name": "BSN01",
+                                                    "name": "CTT01",
                                                     "description": "N/A",
-                                                    "type": "empty"
+                                                    "type": "value",
+                                                    "value": "4"
                                                 },
                                                 {
-                                                    "name": "BSN02",
-                                                    "description": "N/A",
-                                                    "type": "empty"
-                                                },
-                                                {
-                                                    "name": "BSN03",
-                                                    "description": "Date",
-                                                    "type": "fromJson",
-                                                    "path": "order.__value.pickup_appt_start_at",
-                                                    "dateTimeFormat": "YYYYMMDD",
-                                                    "minLength": 8,
-                                                    "maxLength": 8
-                                                },
-                                                {
-                                                    "name": "BSN04",
-                                                    "description": "Time",
-                                                    "type": "fromJson",
-                                                    "path": "order.__value.pickup_appt_start_at",
-                                                    "dateTimeFormat": "HHmm",
-                                                    "minLength": 4,
-                                                    "maxLength": 8
-                                                },
-                                                {
-                                                    "name": "BSN05",
+                                                    "name": "CTT02",
                                                     "description": "N/A",
                                                     "type": "empty"
                                                 }
