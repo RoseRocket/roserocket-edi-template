@@ -1,3 +1,5 @@
+<a href='./EDI_Library.md'><< Back</a>
+
 # Creating a new EDI file
 As the label should indicate, the following will provide some direction when sending 'WRITE' instructions
 to the online EDI Library. For guidance in reading existing EDI files, please read the document
