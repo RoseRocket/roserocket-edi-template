@@ -17,7 +17,9 @@ router.get('/ping', (req, res) => res.json({ message: 'pong' }));
 //---------------------------------------------
 
 // RR-Webhooks --------------------------------
-router.post('/webhooks/order/dispatched', edi.create204FromRoseRocket);
+// disabling dispatched endpoint, GREENFIBER is not in need of this functionality
+//router.post('/webhooks/order/dispatched', edi.create204FromRoseRocket);
+router.post('/webhooks/order/in_transit', edi.create856FromRoseRocket);
 //router.post('/webhooks/outbound/:ediType', edi.exportRR_EDIFile);
 //router.post('/webhooks/inbound/:ediType', edi.importRR_EDIFile);
 //---------------------------------------------

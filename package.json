@@ -47,6 +47,7 @@
         "morgan": "1.5.1",
         "p-queue": "2.2.0",
         "promise": "7.1.1",
+        "ssh2-sftp-client": "2.5.0",
         "superagent": "3.0.0"
     },
     "devDependencies": {

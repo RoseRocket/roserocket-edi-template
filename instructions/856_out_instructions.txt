@@ -1,0 +1,802 @@
+{
+    "type": "edi",
+    "description": "EDI File",
+    "elements": [
+        {
+            "type": "ediGroup",
+            "description": "EDI Group",
+            "elements": [
+                {
+                    "description": "Orders Loop",
+                    "type": "loopBlock",
+                    "path": "orders",
+                    "itemName": "order",
+                    "elements": [
+                        {
+                            "type": "ediOrder",
+                            "description": "EDI Order",
+                            "elements": [
+                                {
+                                    "description": "Order Block",
+                                    "type": "block",
+                                    "elements": [
+                                        {
+                                            "segmentIdentifier": "BSN",
+                                            "description": "Beginning Segment for Shipment Identifiers",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "BSN01",
+                                                    "description": "N/A",
+                                                    "type": "value",
+                                                    "value": "14"
+                                                },
+                                                {
+                                                    "name": "BSN02",
+                                                    "description": "N/A",
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.asnNum"
+                                                },
+                                                {
+                                                    "name": "BSN03",
+                                                    "description": "Date",
+                                                    "type": "fromJson",
+                                                    "path": "__vars.currentTime",
+                                                    "dateTimeFormat": "YYYYMMDD",
+                                                    "minLength": 8,
+                                                    "maxLength": 8
+                                                },
+                                                {
+                                                    "name": "BSN04",
+                                                    "description": "Time",
+                                                    "type": "fromJson",
+                                                    "path": "__vars.currentTime",
+                                                    "dateTimeFormat": "HHmm",
+                                                    "minLength": 4,
+                                                    "maxLength": 8
+                                                },
+                                                {
+                                                    "name": "BSN05",
+                                                    "description": "N/A",
+                                                    "type": "value",
+                                                    "value": "0002"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "desjription": "Shipping Block",
+                                            "type": "block",
+                                            "elements": [
+                                                {
+                                                    "segmentIdentifier": "HL",
+                                                    "description": "Hierarchical Level - Shipment",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "HL01",
+                                                            "description": "N/A",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.transmissionNum"
+                                                        },
+                                                        {
+                                                            "name": "HL02",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "HL03",
+                                                            "description": "Block identifier",
+                                                            "type": "value",
+                                                            "value": "S"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "TD1",
+                                                    "description": "Shipment Synopsis",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "TD101",
+                                                            "description": "TOTAL PIECES LABEL",
+                                                            "type": "value",
+                                                            "value": "PCS"
+                                                        },
+                                                        {
+                                                            "name": "TD102",
+                                                            "description": "Total Pieces",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.totalPcs"
+                                                        },
+                                                        {
+                                                            "name": "TD103",
+                                                            "description": "Block identifier",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD104",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD105",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD106",
+                                                            "description": "Weight Qualifier (static)",
+                                                            "type": "value",
+                                                            "value": "A3"
+                                                        },
+                                                        {
+                                                            "name": "TD107",
+                                                            "description": "TOTAL WEIGHT?",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.totalWeight"
+                                                        },
+                                                        {
+                                                            "name": "TD108",
+                                                            "description": "Block identifier",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.default_weight_unit_id"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "TD5",
+                                                    "description": "Shipper Info",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "TD501",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD502",
+                                                            "description": "Identification Code Qualifier",
+                                                            "type": "value",
+                                                            "value": "2"
+                                                        },
+                                                        {
+                                                            "name": "TD503",
+                                                            "description": "SHORT CODE",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.customer.short_code"
+                                                        },
+                                                        {
+                                                            "name": "TD504",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD505",
+                                                            "description": "Routing",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.customer.name"
+                                                        },
+                                                        {
+                                                            "name": "TD506",
+                                                            "description": "Shipment/Order Status Code",
+                                                            "type": "value",
+                                                            "value": "CC"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "REF",
+                                                    "description": "BOL Information",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "REF01",
+                                                            "description": "N/A",
+                                                            "type": "value",
+                                                            "value": "BM"
+                                                        },
+                                                        {
+                                                            "name": "REF02",
+                                                            "description": "BOL (FULL ID)",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.public_id"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "REF",
+                                                    "description": "Shipment ID",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "REF01",
+                                                            "description": "N/A",
+                                                            "type": "value",
+                                                            "value": "CN"
+                                                        },
+                                                        {
+                                                            "name": "REF02",
+                                                            "description": "TMS Shipment ID (No idea)",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.ref_num"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "DTM",
+                                                    "description": "Shipment Date",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "DTM01",
+                                                            "description": "Date/Time Qualifier",
+                                                            "type": "value",
+                                                            "value": "011"
+                                                        },
+                                                        {
+                                                            "name": "DTM02",
+                                                            "description": "Date",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.pickup_start_at",
+                                                            "dateTimeFormat": "YYYYMMDD",
+                                                            "minLength": 8,
+                                                            "maxLength": 8
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N1",
+                                                    "description": "Shipper Address Name",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N101",
+                                                            "description": "Address Information",
+                                                            "type": "value",
+                                                            "value": "SH"
+                                                        },
+                                                        {
+                                                            "name": "N102",
+                                                            "description": "ShipperName",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.origin.org_name",
+                                                            "minLength": 1,
+                                                            "maxLength": 30
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N3",
+                                                    "description": "Shipper Address Information",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N301",
+                                                            "description": "Address Information",
+                                                            "type": "concat",
+                                                            "separator": " ",
+                                                            "args": [
+                                                                {
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.address_1"
+                                                                },
+                                                                {
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.origin.address_2"
+                                                                }
+                                                            ],
+                                                            "minLength": 1,
+                                                            "maxLength": 55
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N4",
+                                                    "description": "Shipper Geographic Location",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N401",
+                                                            "description": "City Name",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.origin.city",
+                                                            "minLength": 2,
+                                                            "maxLength": 30
+                                                        },
+                                                        {
+                                                            "name": "N402",
+                                                            "description": "State or Province Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.origin.state",
+                                                            "minLength": 2,
+                                                            "maxLength": 2
+                                                        },
+                                                        {
+                                                            "name": "N403",
+                                                            "description": "Postal Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.origin.postal",
+                                                            "minLength": 3,
+                                                            "maxLength": 15
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N1",
+                                                    "description": "Destination Address Name",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N101",
+                                                            "description": "Address Information",
+                                                            "type": "value",
+                                                            "value": "OB"
+                                                        },
+                                                        {
+                                                            "name": "N102",
+                                                            "description": "Destination name",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.org_name",
+                                                            "minLength": 1,
+                                                            "maxLength": 30
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N3",
+                                                    "description": "Destination Address Information",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N301",
+                                                            "description": "Address Information",
+                                                            "type": "concat",
+                                                            "separator": " ",
+                                                            "args": [
+                                                                {
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.address_1"
+                                                                },
+                                                                {
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.destination.address_2"
+                                                                }
+                                                            ],
+                                                            "minLength": 1,
+                                                            "maxLength": 55
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "N4",
+                                                    "description": "Destination Geographic Location",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "N401",
+                                                            "description": "City Name",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.city",
+                                                            "minLength": 2,
+                                                            "maxLength": 30
+                                                        },
+                                                        {
+                                                            "name": "N402",
+                                                            "description": "State or Province Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.state",
+                                                            "minLength": 2,
+                                                            "maxLength": 2
+                                                        },
+                                                        {
+                                                            "name": "N403",
+                                                            "description": "Postal Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.postal",
+                                                            "minLength": 3,
+                                                            "maxLength": 15
+                                                        },
+                                                        {
+                                                            "name": "N404",
+                                                            "description": "Country Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.country",
+                                                            "minLength": 2,
+                                                            "maxLength": 3
+                                                        },
+                                                        {
+                                                            "name": "N405",
+                                                            "description": "Item Code",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.destination.thd_destination_code"
+                                                        },
+                                                        {
+                                                            "name": "N406",
+                                                            "description": "Shop Number",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.tender_num"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "description": "Purchase Orders Block",
+                                            "type": "loopBlock",
+                                            "path": "order.__value.orders",
+                                            "itemName": "purchaseOrder",
+                                            "elements": [
+                                                {
+                                                    "segmentIdentifier": "HL",
+                                                    "description": "Hierarchical Level - Order",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "HL01",
+                                                            "description": "N/A",
+                                                            "type": "fromJson",
+                                                            "path": "purchaseOrder.__value.orderNum"
+                                                        },
+                                                        {
+                                                            "name": "HL02",
+                                                            "description": "N/A",
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.transmissionNum"
+                                                        },
+                                                        {
+                                                            "name": "HL03",
+                                                            "description": "Block identifier",
+                                                            "type": "value",
+                                                            "value": "O"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "PRF",
+                                                    "description": "Purchase purchaseOrder information",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "PRF01",
+                                                            "description": "PO ID",
+                                                            "type": "fromJson",
+                                                            "path": "purchaseOrder.__value.external_id"
+                                                        },
+                                                        {
+                                                            "name": "PRF02",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "PRF03",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "PRF04",
+                                                            "description": "PO Date",
+                                                            "type": "fromJson",
+                                                            "path": "purchaseOrder.__value.created_at",
+                                                            "dateTimeFormat": "YYYYMMDD",
+                                                            "minLength": 8,
+                                                            "maxLength": 8
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "segmentIdentifier": "TD1",
+                                                    "description": "Purchase Order dims",
+                                                    "type": "line",
+                                                    "elements": [
+                                                        {
+                                                            "name": "TD101",
+                                                            "description": "TOTAL PIECES LABEL",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD102",
+                                                            "description": "Total Pieces",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD103",
+                                                            "description": "Block identifier",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD104",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD105",
+                                                            "description": "N/A",
+                                                            "type": "empty"
+                                                        },
+                                                        {
+                                                            "name": "TD106",
+                                                            "description": "NO IDEA",
+                                                            "type": "value",
+                                                            "value": "A3"
+                                                        },
+                                                        {
+                                                            "name": "TD107",
+                                                            "description": "TOTAL WEIGHT?",
+                                                            "type": "fromJson",
+                                                            "path": "purchaseOrder.__value.totalWeight"
+                                                        },
+                                                        {
+                                                            "name": "TD108",
+                                                            "description": "Block identifier",
+                                                            "type": "fromJson",
+                                                            "path": "purchaseOrder.__value.default_weight_unit_id"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "description": "Items Block",
+                                                    "type": "block",
+                                                    "elements": [
+                                                        {
+                                                            "description": "Commodities (Items) Loop",
+                                                            "type": "loopBlock",
+                                                            "path": "purchaseOrder.__value.commodities",
+                                                            "itemName": "commodity",
+                                                            "elements": [
+                                                                {
+                                                                    "segmentIdentifier": "HL",
+                                                                    "description": "Hierarchical Level - Tare/Pallet",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "HL01",
+                                                                            "description": "N/A",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.tareNum"
+                                                                        },
+                                                                        {
+                                                                            "name": "HL02",
+                                                                            "description": "N/A",
+                                                                            "type": "fromJson",
+                                                                            "path": "purchaseOrder.__value.orderNum"
+                                                                        },
+                                                                        {
+                                                                            "name": "HL03",
+                                                                            "description": "Block identifier",
+                                                                            "type": "value",
+                                                                            "value": "T"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "MAN",
+                                                                    "description": "Pallet Label",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "MAN01",
+                                                                            "description": "NO IDEA",
+                                                                            "type": "value",
+                                                                            "value": "GM"
+                                                                        },
+                                                                        {
+                                                                            "name": "MAN02",
+                                                                            "description": "Label Barcode ID",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.ucc_label",
+                                                                            "minLength": 1,
+                                                                            "maxLength": 30
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "HL",
+                                                                    "description": "Hierarchical Level - Item",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "HL01",
+                                                                            "description": "N/A",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.productNum"
+                                                                    },
+                                                                        {
+                                                                            "name": "HL02",
+                                                                            "description": "N/A",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.tareNum"
+                                                                        },
+                                                                        {
+                                                                            "name": "HL03",
+                                                                            "description": "Block identifier",
+                                                                            "type": "value",
+                                                                            "value": "I"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "LIN",
+                                                                    "description": "Description, Marks and Numbers",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "LIN01",
+                                                                            "description": "Index",
+                                                                            "type": "value",
+                                                                            "value": "1"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN02",
+                                                                            "description": "Vendor Part Number Identifier",
+                                                                            "type": "value",
+                                                                            "value": "VP"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN03",
+                                                                            "description": "SKU Descriptor",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.sku"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN04",
+                                                                            "description": "SKU Identifier",
+                                                                            "type": "value",
+                                                                            "value": "SK"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN05",
+                                                                            "description": "SKU",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.thd_sku"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN06",
+                                                                            "description": "UCC-12 Identifier",
+                                                                            "type": "value",
+                                                                            "value": "UP"
+                                                                        },
+                                                                        {
+                                                                            "name": "LIN07",
+                                                                            "description": "UCC-12",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.gtin_12"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "SN1",
+                                                                    "description": "Description, Marks and Numbers",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "SN101",
+                                                                            "description": "Index",
+                                                                            "type": "value",
+                                                                            "value": "1"
+                                                                        },
+                                                                        {
+                                                                            "name": "SN102",
+                                                                            "description": "# of units",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.pieces"
+                                                                        },
+                                                                        {
+                                                                            "name": "SN103",
+                                                                            "description": "Measurement (EACH)",
+                                                                            "type": "value",
+                                                                            "value": "EA"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "SLN",
+                                                                    "description": "Description, Marks and Numbers",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "SLN01",
+                                                                            "description": "Index",
+                                                                            "type": "value",
+                                                                            "value": "1"
+                                                                        },
+                                                                        {
+                                                                            "name": "SLN02",
+                                                                            "description": "N/A",
+                                                                            "type":"empty"
+                                                                        },
+                                                                        {
+                                                                            "name": "SLN03",
+                                                                            "description": "Relationship Code '(I)ncluded'",
+                                                                            "type": "value",
+                                                                            "value": "I"
+                                                                        },
+                                                                        {
+                                                                            "name": "SLN03",
+                                                                            "description": "Quantity",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.pieces"
+                                                                        },
+                                                                        {
+                                                                            "name": "SLN05",
+                                                                            "description": "Unit of Measurement",
+                                                                            "type": "value",
+                                                                            "value": "EA"
+                                                                        },
+                                                                        {
+                                                                            "name": "SLN06",
+                                                                            "description": "Unit Price",
+                                                                            "type": "fromJson",
+                                                                            "path": "commodity.__value.price"
+                                                                        }
+
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "segmentIdentifier": "PID",
+                                                                    "description": "Product Description",
+                                                                    "type": "line",
+                                                                    "elements": [
+                                                                        {
+                                                                            "name": "PID01",
+                                                                            "description": "Index",
+                                                                            "type": "value",
+                                                                            "value": "F"
+                                                                        },
+                                                                        {
+                                                                            "name": "PID02",
+                                                                            "description": "N/A",
+                                                                            "type":"empty"
+                                                                        },
+                                                                        {
+                                                                            "name": "PID03",
+                                                                            "description": "N/A",
+                                                                            "type":"empty"
+                                                                        },
+                                                                        {
+                                                                            "name": "PID04",
+                                                                            "description": "N/A",
+                                                                            "type":"empty"
+                                                                        },
+                                                                        {
+                                                                            "name": "PID05",
+                                                                            "description": "Description",
+                                                                            "type":"fromJson",
+                                                                            "path": "commodity.__value.description"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "segmentIdentifier": "CTT",
+                                            "description": "ASN Group Synopsis",
+                                            "type": "line",
+                                            "elements": [
+                                                {
+                                                    "name": "CTT01",
+                                                    "description": "N/A",
+                                                    "type": "fromJson",
+                                                    "path": "__vars.totalHL"
+                                                },
+                                                {
+                                                    "name": "CTT02",
+                                                    "description": "N/A",
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.totalPcs"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

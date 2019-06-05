@@ -4,7 +4,6 @@ import { printFuncError } from '../utils/utils.js';
 
 export function baseRequest(options = {}) {
     const { url, data, method = 'get', headers, timeout, verbose } = options;
-
     const requestType = method.toLowerCase();
     const consoleOutput = !!verbose;
 
@@ -17,7 +16,7 @@ export function baseRequest(options = {}) {
         body = data;
     }
 
-    if(consoleOutput){
+    if (consoleOutput) {
         //console.log(`Executing 3rd party API: [${method.toUpperCase()}] ${url}`, query, body);
         console.log(`Executing 3rd party API: [${method.toUpperCase()}] ${url}`);
     }
@@ -30,10 +29,10 @@ export function baseRequest(options = {}) {
             .query(query)
             .end((error, response = {}) => {
                 if (error) {
-                    printFuncError(method,`${url} error:${error}`);
+                    printFuncError(method, `${url} error:${error}`);
                     reject(error);
                 }
-                if(consoleOutput){
+                if (consoleOutput) {
                     console.log(`${method} ${url} success:`, response.body);
                 }
 

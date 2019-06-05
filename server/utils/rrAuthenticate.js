@@ -1,11 +1,23 @@
 import * as rrAuth from '../api/rrAuth';
-const { USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET, TOKEN_FILE } = process.env;
+import { ENVIRONMENT_VARS, DEFAULT_ENVIRONMENT } from '../constants/rrconstants';
 import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
+import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
 
-export function rrAuthenticate() {
+// In order to support multiple orgs, the rrAuthenticate function can be called with an orgID
+// which will load a org that may differ from the default.
+export function rrAuthenticateWithSubdomain(subdomain) {
+    return rrAuthenticate(ENVIRONMENT_VARS.find(env => env.SUBDOMAIN == subdomain).ID);
+}
+
+// Generic auth function, will load org credentials from rrconstants file, if orgId is empty
+// it will use the 'Default Environment ID'
+export function rrAuthenticate(orgId = DEFAULT_ENVIRONMENT) {
     return new Promise((resolve, reject) => {
+        const ENV = ENVIRONMENT_VARS.find(env => env.ID == orgId);
+        const TOKEN_FILE = ENV.TOKEN_FILE;
+
         const dir = path.dirname(TOKEN_FILE);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
@@ -15,16 +27,14 @@ export function rrAuthenticate() {
             if (err) {
                 rrAuth
                     .oauth2('', {
+                        ...ENV.CREDENTIALS,
                         grant_type: 'password',
-                        client_id: CLIENT_ID,
-                        client_secret: CLIENT_SECRET,
-                        username: USERNAME,
-                        password: PASSWORD,
                     })
                     .then(resp => {
-                        fs.writeFile(TOKEN_FILE, JSON.stringify(resp.data, null, 4), err => {
+                        const result = { ...resp.data, orgId };
+                        fs.writeFile(TOKEN_FILE, JSON.stringify(result, null, 4), err => {
                             if (err) reject(err);
-                            resolve(resp.data);
+                            resolve(result);
                         });
                     })
                     .catch(err => reject(err));
@@ -47,9 +57,10 @@ export function rrAuthenticate() {
                             refresh_token: token.refresh_token,
                         })
                         .then((resp = {}) => {
-                            fs.writeFile(TOKEN_FILE, JSON.stringify(resp.data, null, 4), err => {
+                            const result = { ...resp.data, orgId };
+                            fs.writeFile(TOKEN_FILE, JSON.stringify(result, null, 4), err => {
                                 if (err) reject(err);
-                                resolve(resp.data);
+                                resolve(result);
                             });
                         })
                         .catch(err => () => {
@@ -57,18 +68,16 @@ export function rrAuthenticate() {
                             rrAuth
                                 .oauth2('', {
                                     grant_type: 'password',
-                                    client_id: CLIENT_ID,
-                                    client_secret: CLIENT_SECRET,
-                                    username: USERNAME,
-                                    password: PASSWORD,
+                                    ...ENV.CREDENTIALS,
                                 })
                                 .then((resp = {}) => {
+                                    const result = { ...resp.data, orgId };
                                     fs.writeFile(
                                         TOKEN_FILE,
-                                        JSON.stringify(resp.data, null, 4),
+                                        JSON.stringify(result, null, 4),
                                         err => {
                                             if (err) reject(err);
-                                            resolve(resp.data);
+                                            resolve(result);
                                         }
                                     );
                                 })
