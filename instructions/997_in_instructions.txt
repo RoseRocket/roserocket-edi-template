@@ -1,0 +1,89 @@
+{
+    "__edi": {
+        "companyName": "Test Company",
+        "interchangeSenderId": "TT",
+        "interchangeReceiverId": "TTXG",
+        "elementTerminator": "*",
+        "segmentTerminator": "\n"
+    },
+   "AK1": {
+        "type":"line",
+        "elements": [
+            {
+                "name": "AK101",
+                "description": "Functional Identifier Code Description",
+                "type": "toJson",
+                "path": "gcn_code"
+            },
+            {
+                "name": "AK102",
+                "description": "Group Control Number",
+                "type": "toJson",
+                "path": "gcn_id"
+            }
+        ]
+    },
+    "AK2": {
+        "type": "loopBlock",
+        "arrayName": "responses",
+        "instructions": {
+            "AK2": {
+                "type":"line",
+                "elements": [
+                    {
+                        "name": "AK201",
+                        "description": "Transaction Set Identifier Code",
+                        "type": "toJson",
+                        "path": "tsn_code"
+                    },
+                    {
+                        "name": "AK202",
+                        "description": "Transaction Set Control Number",
+                        "type": "toJson",
+                        "path": "tsn_id"
+                    }
+                ]
+            },
+            "AK5": {
+                "type":"line",
+                "elements": [
+                    {
+                        "name": "AK501",
+                        "description": "Transaction Set Acknowledgment Code",
+                        "type": "toJson",
+                        "path": "response_code"
+                    }
+                ]
+            }
+        }
+    },
+    "AK9": {
+        "type":"line",
+        "elements": [
+            {
+                "name": "AK901",
+                "description": "Functional Group Acknowledge Code",
+                "type": "toJson",
+                "path": "gcn_status"
+            },
+            {
+                "name": "AK902",
+                "description": "Number of Transaction Sets Included",
+                "type": "toJson",
+                "path": "total_sent"
+            },
+            {
+                "name": "AK903",
+                "description": "Number of Received Transaction Sets",
+                "type": "toJson",
+                "path": "total_received"
+            },
+            {
+                "name": "AK904",
+                "description": "Number of Accepted Transaction Sets",
+                "type": "toJson",
+                "path": "total_accepted"
+            }
+        ]
+    }
+}

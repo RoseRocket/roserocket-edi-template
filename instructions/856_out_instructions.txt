@@ -66,7 +66,7 @@
                                             "elements": [
                                                 {
                                                     "segmentIdentifier": "HL",
-                                                    "description": "Beginning Segment for Shipment Identifiers",
+                                                    "description": "Hierarchical Level - Shipment",
                                                     "type": "line",
                                                     "elements": [
                                                         {
@@ -423,7 +423,7 @@
                                             "elements": [
                                                 {
                                                     "segmentIdentifier": "HL",
-                                                    "description": "Beginning Segment for Purchase Orders",
+                                                    "description": "Hierarchical Level - Order",
                                                     "type": "line",
                                                     "elements": [
                                                         {
@@ -536,7 +536,7 @@
                                             "elements": [
                                                 {
                                                     "segmentIdentifier": "HL",
-                                                    "description": "Beginning Segment for Purchase Orders",
+                                                    "description": "Hierarchical Level - Tare/Pallet",
                                                     "type": "line",
                                                     "elements": [
                                                         {
@@ -595,36 +595,36 @@
                                             "type": "block",
                                             "elements": [
                                                 {
-                                                    "segmentIdentifier": "HL",
-                                                    "description": "Beginning Segment for Purchase Orders",
-                                                    "type": "line",
-                                                    "elements": [
-                                                        {
-                                                            "name": "HL01",
-                                                            "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "4"
-                                                       },
-                                                        {
-                                                            "name": "HL02",
-                                                            "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "3"
-                                                        },
-                                                        {
-                                                            "name": "HL03",
-                                                            "description": "Block identifier",
-                                                            "type": "value",
-                                                            "value": "I"
-                                                        }
-                                                    ]
-                                                },
-                                                {
                                                     "description": "Commodities (Items) Loop",
                                                     "type": "loopBlock",
                                                     "path": "order.__value.commodities",
                                                     "itemName": "commodity",
                                                     "elements": [
+                                                        {
+                                                            "segmentIdentifier": "HL",
+                                                            "description": "Hierarchical Level - Item",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "HL01",
+                                                                    "description": "N/A",
+                                                                    "type": "value",
+                                                                    "value": "4"
+                                                            },
+                                                                {
+                                                                    "name": "HL02",
+                                                                    "description": "N/A",
+                                                                    "type": "value",
+                                                                    "value": "3"
+                                                                },
+                                                                {
+                                                                    "name": "HL03",
+                                                                    "description": "Block identifier",
+                                                                    "type": "value",
+                                                                    "value": "I"
+                                                                }
+                                                            ]
+                                                        },
                                                         {
                                                             "segmentIdentifier": "LIN",
                                                             "description": "Description, Marks and Numbers",

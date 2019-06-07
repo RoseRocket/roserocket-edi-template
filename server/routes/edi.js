@@ -275,6 +275,12 @@ export function processFile(file, ediType) {
                                         markFileAsError(file, `processFile - ${ediType}`, err)
                                     );
                                     break;
+
+                                case EDI_TYPES['997']:
+                                    acknowledgeASN(order).catch(err =>
+                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                    );
+                                    break;
                             }
                         }
                     }
@@ -445,4 +451,45 @@ export function markFileAsError(fileName, functionName, msg, verbose) {
     }
     printFuncError(functionName, `Error Updating from file -- ${fileName}`);
     localFileMove(`${LOCAL_SYNC_DIRECTORY}/processing`, `${DOWNLOAD_ERROR_DIR}`, fileName, true);
+}
+
+// RR Integration function, only dealing with approved 990s, this function updates Roserocket's
+// internal records to match the IDs in your system
+export function acknowledgeASN(orderData) {
+    return new Promise((resolve, reject) => {
+        /*
+        const orderID = `full_id:${orderData.full_id}`;
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+                authToken = res1.access_token;
+                return rrapi.getOrder(authToken, orderID);
+            })
+            .then(function(res2) {
+                if (!res2) {
+                    reject(
+                        `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`
+                    );
+                    return;
+                }
+                const { order = {} } = res2;
+                const { customer = {} } = order;
+                //'Revise' Platform API endpoint only requires the fields that are being updated; for safety, only send the external_id
+                return rrapi.reviseOrder(authToken, customer.id, order.id, {
+                    external_id: orderData.external_id,
+                });
+            })
+            .then(resolve)
+            .catch(reject);
+            */
+        if (orderData.ID != 'asdf') {
+            reject('This will fail');
+        }
+        resolve();
+    });
 }
