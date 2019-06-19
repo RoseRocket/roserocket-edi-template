@@ -2,7 +2,7 @@
    { "companyName": "RoseRocket",
      "interchangeSenderId": "RR",
      "interchangeReceiverId": "072271711",
-     "groupControlNumber": "asdf",
+     "groupControlNumber": "00006",
      "segmentTerminator": "~\n" },
   "__vars":
    { "totalHL": 10,
@@ -117,7 +117,7 @@
             "pieces": 5,
             "commodity_type_other": "",
             "sku": "1300001",
-            "ucc_label": "(00) 1 07294771 17213001 9",
+            "ucc_label": "00107294771172130019",
             "tareNum": 3,
             "productNum": 4 },
           { "id": "278d5993-9ac0-4e5f-9182-01f757e342b1",
@@ -138,7 +138,7 @@
             "pieces": 5,
             "commodity_type_other": "",
             "sku": "1300001",
-            "ucc_label": "(00) 1 07294771 17213002 6",
+            "ucc_label": "00107294771172130026",
             "tareNum": 5,
             "productNum": 6 },
           { "id": "c232ea1b-d9b5-4f0f-bcca-c5126803aa65",
@@ -159,7 +159,7 @@
             "pieces": 14,
             "commodity_type_other": "",
             "sku": "1300002",
-            "ucc_label": "(00) 1 07294771 17213003 3",
+            "ucc_label": "00107294771172130033",
             "tareNum": 7,
             "productNum": 8 },
           { "id": "7d7a0b63-efe8-4aaa-aa77-1df2377f4e35",
@@ -180,9 +180,9 @@
             "pieces": 21,
             "commodity_type_other": "",
             "sku": "1300003",
-            "ucc_label": "(00) 1 07294771 17213004 0",
+            "ucc_label": "00107294771172130040",
             "tareNum": 9,
-            "productNum": 10 
+            "productNum": 10
           } ],
 	 "accessorials": [],
 	"is_multistop_order": false,
@@ -190,6 +190,7 @@
 	"multistop_order_full_id": null,
 	"multistop_order_sequence_id": 0,
 	"transmissionNum": 1,
-	"orderNum": 2 
-    } ] 
+  "orderNum": 2,
+  "totalPcs": 45
+    } ]
 }

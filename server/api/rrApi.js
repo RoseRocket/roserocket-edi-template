@@ -58,6 +58,16 @@ export function getOrderWithSSCC18(token, orderId) {
 // getRequestEDITransaction will communicate with the RoseRocket System to retrieve Order details by way of the
 // orderID provided in the Webhook Request, and include the expected SSCC-18 labels
 export function getRequestEDITransaction(token, orders) {
+    var ordersData = [];
+    var counter = 0;
+    for (const order of orders) {
+        counter++;
+        var o = {
+            order_id: order.id,
+            transaction_set_number: counter,
+        };
+        ordersData.push(o);
+    }
     return baseRequest({
         timeout: config.timeout,
         headers: {
@@ -65,8 +75,8 @@ export function getRequestEDITransaction(token, orders) {
             'Content-Type': 'application/json;charset=utf-8',
             Authorization: `${config.tokenType} ${token}`,
         },
-        url: `${BASE_API_URL}${format(ediCreate)}`,
-        data: orders,
+        url: `${BASE_API_URL}${format(config.urls.ediCreate)}`,
+        data: { orders: ordersData },
         method: 'post',
     });
 }
@@ -136,6 +146,7 @@ export function generateEdiRequestBody(orders, options = {}) {
     const respondBy = moment()
         .add(12, 'hours')
         .toISOString();
+    const currentTime = moment().toISOString();
     const gcn = options.groupControlNumber || '0001';
     var edi = {
         companyName: ISA_COMPANY_NAME,
@@ -157,6 +168,7 @@ export function generateEdiRequestBody(orders, options = {}) {
         __vars: {
             ...options.__vars,
             respondBy,
+            currentTime,
         },
         orders: orders,
     };

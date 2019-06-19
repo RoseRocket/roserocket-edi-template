@@ -28,18 +28,20 @@
                                                 {
                                                     "name": "BSN01",
                                                     "description": "N/A",
-                                                    "type": "empty"
+                                                    "type": "value",
+                                                    "value": "14"
                                                 },
                                                 {
                                                     "name": "BSN02",
                                                     "description": "N/A",
-                                                    "type": "empty"
+                                                    "type": "fromJson",
+                                                    "path": "order.__value.asnNum"
                                                 },
                                                 {
                                                     "name": "BSN03",
                                                     "description": "Date",
                                                     "type": "fromJson",
-                                                    "path": "order.__value.pickup_start_at",
+                                                    "path": "__vars.currentTime",
                                                     "dateTimeFormat": "YYYYMMDD",
                                                     "minLength": 8,
                                                     "maxLength": 8
@@ -48,7 +50,7 @@
                                                     "name": "BSN04",
                                                     "description": "Time",
                                                     "type": "fromJson",
-                                                    "path": "order.__value.pickup_start_at",
+                                                    "path": "__vars.currentTime",
                                                     "dateTimeFormat": "HHmm",
                                                     "minLength": 4,
                                                     "maxLength": 8
@@ -56,12 +58,13 @@
                                                 {
                                                     "name": "BSN05",
                                                     "description": "N/A",
-                                                    "type": "empty"
+                                                    "type": "value",
+                                                    "value": "0002"
                                                 }
                                             ]
                                         },
                                         {
-                                            "description": "Shipping Block",
+                                            "desjription": "Shipping Block",
                                             "type": "block",
                                             "elements": [
                                                 {
@@ -72,8 +75,8 @@
                                                         {
                                                             "name": "HL01",
                                                             "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "order.__value.transmissionNum"
+                                                            "type": "fromJson",
+                                                            "path": "order.__value.transmissionNum"
                                                         },
                                                         {
                                                             "name": "HL02",
@@ -122,7 +125,7 @@
                                                         },
                                                         {
                                                             "name": "TD106",
-                                                            "description": "NO IDEA",
+                                                            "description": "Weight Qualifier (static)",
                                                             "type": "value",
                                                             "value": "A3"
                                                         },
@@ -130,7 +133,7 @@
                                                             "name": "TD107",
                                                             "description": "TOTAL WEIGHT?",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.total_weight"
+                                                            "path": "order.__value.totalWeight"
                                                         },
                                                         {
                                                             "name": "TD108",
@@ -152,7 +155,7 @@
                                                         },
                                                         {
                                                             "name": "TD502",
-                                                            "description": "N/A",
+                                                            "description": "Identification Code Qualifier",
                                                             "type": "value",
                                                             "value": "2"
                                                         },
@@ -169,13 +172,13 @@
                                                         },
                                                         {
                                                             "name": "TD505",
-                                                            "description": "Org Name",
+                                                            "description": "Routing",
                                                             "type": "fromJson",
                                                             "path": "order.__value.customer.name"
                                                         },
                                                         {
                                                             "name": "TD506",
-                                                            "description": "NO IDEA",
+                                                            "description": "Shipment/Order Status Code",
                                                             "type": "value",
                                                             "value": "CC"
                                                         }
@@ -215,7 +218,7 @@
                                                             "name": "REF02",
                                                             "description": "TMS Shipment ID (No idea)",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.public_id"
+                                                            "path": "order.__value.ref_num"
                                                         }
                                                     ]
                                                 },
@@ -226,7 +229,7 @@
                                                     "elements": [
                                                         {
                                                             "name": "DTM01",
-                                                            "description": "N/A",
+                                                            "description": "Date/Time Qualifier",
                                                             "type": "value",
                                                             "value": "011"
                                                         },
@@ -430,13 +433,13 @@
                                                             "name": "HL01",
                                                             "description": "N/A",
                                                             "type": "fromJson",
-                                                            "value": "order.__value.orderNum"
+                                                            "path": "order.__value.orderNum"
                                                         },
                                                         {
                                                             "name": "HL02",
                                                             "description": "N/A",
                                                             "type": "fromJson",
-                                                            "value": "order.__value.transmissionNum"
+                                                            "path": "order.__value.transmissionNum"
                                                         },
                                                         {
                                                             "name": "HL03",
@@ -518,73 +521,13 @@
                                                             "name": "TD107",
                                                             "description": "TOTAL WEIGHT?",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.total_weight"
+                                                            "path": "order.__value.totalWeight"
                                                         },
                                                         {
                                                             "name": "TD108",
                                                             "description": "Block identifier",
                                                             "type": "fromJson",
                                                             "path": "order.__value.default_weight_unit_id"
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "description": "Tare (Pallet) Block",
-                                            "type": "block",
-                                            "elements": [
-                                                {
-                                                    "segmentIdentifier": "HL",
-                                                    "description": "Hierarchical Level - Tare/Pallet",
-                                                    "type": "line",
-                                                    "elements": [
-                                                        {
-                                                            "name": "HL01",
-                                                            "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "2"
-                                                        },
-                                                        {
-                                                            "name": "HL02",
-                                                            "description": "N/A",
-                                                            "type": "fromJson",
-                                                            "value": "order.__value.orderNum"
-                                                        },
-                                                        {
-                                                            "name": "HL03",
-                                                            "description": "Block identifier",
-                                                            "type": "value",
-                                                            "value": "T"
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "description": "Pallet Label Loop",
-                                                    "type": "loopBlock",
-                                                    "path": "order.__value.labels",
-                                                    "itemName": "label",
-                                                    "elements": [
-                                                        {
-                                                            "segmentIdentifier": "MAN",
-                                                            "description": "Pallet Label",
-                                                            "type": "line",
-                                                            "elements": [
-                                                                {
-                                                                    "name": "MAN01",
-                                                                    "description": "NO IDEA",
-                                                                    "type": "value",
-                                                                    "value": "GM"
-                                                                },
-                                                                {
-                                                                    "name": "MAN02",
-                                                                    "description": "Label Barcode ID",
-                                                                    "type": "fromJson",
-                                                                    "path": "label.__value.barcode",
-                                                                    "minLength": 1,
-                                                                    "maxLength": 30
-                                                                }
-                                                            ]
                                                         }
                                                     ]
                                                 }
@@ -602,20 +545,66 @@
                                                     "elements": [
                                                         {
                                                             "segmentIdentifier": "HL",
+                                                            "description": "Hierarchical Level - Tare/Pallet",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "HL01",
+                                                                    "description": "N/A",
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.tareNum"
+                                                                },
+                                                                {
+                                                                    "name": "HL02",
+                                                                    "description": "N/A",
+                                                                    "type": "fromJson",
+                                                                    "path": "order.__value.orderNum"
+                                                                },
+                                                                {
+                                                                    "name": "HL03",
+                                                                    "description": "Block identifier",
+                                                                    "type": "value",
+                                                                    "value": "T"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "MAN",
+                                                            "description": "Pallet Label",
+                                                            "type": "line",
+                                                            "elements": [
+                                                                {
+                                                                    "name": "MAN01",
+                                                                    "description": "NO IDEA",
+                                                                    "type": "value",
+                                                                    "value": "GM"
+                                                                },
+                                                                {
+                                                                    "name": "MAN02",
+                                                                    "description": "Label Barcode ID",
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.ucc_label",
+                                                                    "minLength": 1,
+                                                                    "maxLength": 30
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "segmentIdentifier": "HL",
                                                             "description": "Hierarchical Level - Item",
                                                             "type": "line",
                                                             "elements": [
                                                                 {
                                                                     "name": "HL01",
                                                                     "description": "N/A",
-                                                                    "type": "value",
-                                                                    "value": "4"
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.productNum"
                                                             },
                                                                 {
                                                                     "name": "HL02",
                                                                     "description": "N/A",
-                                                                    "type": "value",
-                                                                    "value": "3"
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.tareNum"
                                                                 },
                                                                 {
                                                                     "name": "HL03",
@@ -633,22 +622,20 @@
                                                                 {
                                                                     "name": "LIN01",
                                                                     "description": "Index",
-                                                                    "type": "fromJson",
-                                                                    "path": "commodity.__index",
-                                                                    "minLength": 1,
-                                                                    "maxLength": 30
+                                                                    "type": "value",
+                                                                    "value": "1"
                                                                 },
                                                                 {
                                                                     "name": "LIN02",
-                                                                    "description": "Segment Descriptor",
+                                                                    "description": "Vendor Part Number Identifier",
                                                                     "type": "value",
                                                                     "value": "VP"
                                                                 },
                                                                 {
                                                                     "name": "LIN03",
                                                                     "description": "SKU Descriptor",
-                                                                    "type": "value",
-                                                                    "value": "Vendor Part #"
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.nmfc"
                                                                 },
                                                                 {
                                                                     "name": "LIN04",
@@ -664,15 +651,15 @@
                                                                 },
                                                                 {
                                                                     "name": "LIN06",
-                                                                    "description": "NO IDEA",
+                                                                    "description": "UCC-12 Identifier",
                                                                     "type": "value",
                                                                     "value": "UP"
                                                                 },
                                                                 {
                                                                     "name": "LIN07",
-                                                                    "description": "NO IDEA (Home depot part # ?)",
+                                                                    "description": "UCC-12",
                                                                     "type": "fromJson",
-                                                                    "path": "commodity.__value.nmfc"
+                                                                    "path": "commodity.__value.gtin_12"
                                                                 }
                                                             ]
                                                         },
@@ -684,18 +671,18 @@
                                                                 {
                                                                     "name": "SN101",
                                                                     "description": "Index",
-                                                                    "type": "fromJson",
-                                                                    "path": "commodity.__index"
+                                                                    "type": "value",
+                                                                    "value": "1"
                                                                 },
                                                                 {
                                                                     "name": "SN102",
-                                                                    "description": "NO IDEA",
-                                                                    "type": "value",
-                                                                    "value": "200"
+                                                                    "description": "# of units",
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.pieces"
                                                                 },
                                                                 {
                                                                     "name": "SN103",
-                                                                    "description": "NO IDEA",
+                                                                    "description": "Measurement (EACH)",
                                                                     "type": "value",
                                                                     "value": "EA"
                                                                 }
@@ -709,8 +696,8 @@
                                                                 {
                                                                     "name": "SLN01",
                                                                     "description": "Index",
-                                                                    "type": "fromJson",
-                                                                    "path": "commodity.__index"
+                                                                    "type": "value",
+                                                                    "value": "1"
                                                                 },
                                                                 {
                                                                     "name": "SLN02",
@@ -719,27 +706,27 @@
                                                                 },
                                                                 {
                                                                     "name": "SLN03",
-                                                                    "description": "NO IDEA",
+                                                                    "description": "Relationship Code '(I)ncluded'",
                                                                     "type": "value",
-                                                                    "value": "i"
+                                                                    "value": "I"
                                                                 },
                                                                 {
                                                                     "name": "SLN03",
-                                                                    "description": "NO IDEA",
-                                                                    "type": "value",
-                                                                    "value": "200"
+                                                                    "description": "Quantity",
+                                                                    "type": "fromJson",
+                                                                    "path": "commodity.__value.pieces"
                                                                 },
                                                                 {
                                                                     "name": "SLN05",
-                                                                    "description": "NO IDEA",
+                                                                    "description": "Unit of Measurement",
                                                                     "type": "value",
                                                                     "value": "EA"
                                                                 },
                                                                 {
                                                                     "name": "SLN06",
-                                                                    "description": "Price per?",
-                                                                    "type": "value",
-                                                                    "value": "3.10"
+                                                                    "description": "Unit Price",
+                                                                    "type": "empty",
+                                                                    "value": "commodity.__value.price"
                                                                 }
 
                                                             ]
@@ -815,13 +802,14 @@
                                                 {
                                                     "name": "CTT01",
                                                     "description": "N/A",
-                                                    "type": "value",
-                                                    "value": "4"
+                                                    "type": "fromJson",
+                                                    "path": "__vars.totalHL"
                                                 },
                                                 {
                                                     "name": "CTT02",
                                                     "description": "N/A",
-                                                    "type": "empty"
+                                                    "type": "fromJson",
+                                                    "path": "__vars.totalPcs"
                                                 }
                                             ]
                                         }

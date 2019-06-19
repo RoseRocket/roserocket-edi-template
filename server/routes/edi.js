@@ -111,35 +111,56 @@ export function create856FromRoseRocket(req, res, next) {
                             error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
                             return next({ error });
                         }
-                        const orderData = ediOutHelpers.processOrderForASN([res2.order]); // <--- RR integration webhook expects single order requests
 
-                        const data = generateEdiRequestBody(orderData.orders, {
-                            groupControlNumber: 'asdf',
-                            segmentTerminator: '~\n',
-                            verbose: true,
-                            __vars: {
-                                totalHL: orderData.totalHL,
-                                totalPcs: orderData.totalPcs,
-                            },
-                        });
-                        printFuncLog('create856FromRoseRocket', data);
-                        /*
+                        //printFuncLog('create856FromRoseRocket', orderData);
+                        var orders = [res2.order];
 
-                        // generate 204 EDI data for that company
-                        generateEDI(ediType, data)
-                            .then(function(res = {}) {
-                                const { filePath = '', tmpPath = '' } = generateFileNames(
-                                    ediType,
-                                    true
+                        rrapi
+                            .getRequestEDITransaction(res1.access_token, orders)
+                            .then(function(res3) {
+                                if (!res3) {
+                                    error = `Unknown error when attempting to generate system EDI Transaction`;
+                                    return next({ error });
+                                }
+                                const { edi_group = {} } = res3;
+                                const orderData = ediOutHelpers.processOrderForASN(
+                                    orders,
+                                    edi_group
+                                ); // <--- RR integration webhook expects single order requests
+
+                                const data = generateEdiRequestBody(orderData.orders, {
+                                    groupControlNumber: orderData.groupControlNumber,
+                                    segmentTerminator: '~\n',
+                                    __vars: {
+                                        totalHL: orderData.totalHL,
+                                        totalPcs: orderData.totalPcs,
+                                    },
+                                });
+
+                                printFuncLog(
+                                    'create856FromRoseRocket - requestEDI - Generic Log',
+                                    data
                                 );
-                                sendAndBackupFile(res, filePath, tmpPath);
+                                // generate 856 EDI data for that company
+                                generateEDI(ediType, data)
+                                    .then(function(res = {}) {
+                                        const { filePath = '', tmpPath = '' } = generateFileNames(
+                                            ediType,
+                                            true
+                                        );
+                                        sendAndBackupFile(res, filePath, tmpPath);
+                                    })
+                                    .catch(err => printFuncError('create856FromRoseRocket', err));
                             })
-                            .catch(err => printFuncError('create856FromRoseRocket', err));
-                            */
+                            .catch(err =>
+                                printFuncError('create856FromRoseRocket - requestEDI', err)
+                            );
                     })
-                    .catch(err => printFuncError('create856FromRoseRocket', err));
+                    .catch(err =>
+                        printFuncError('create856FromRoseRocket - GetOrderWithSSCC18', err)
+                    );
             })
-            .catch(err => printFuncError('create856FromRoseRocket', err));
+            .catch(err => printFuncError('create856FromRoseRocket - Auth', err));
         quickResponse(res);
         return;
     } catch (error) {
