@@ -1,6 +1,7 @@
 import { baseRequest } from './baseRequest.js';
 import { format } from 'util';
 import moment from 'moment';
+import { printFuncLog } from '../utils/utils';
 
 const {
     BASE_API_URL,
@@ -20,6 +21,9 @@ export const config = {
         customerOrderRevise: '/api/v1/customers/%s/orders/%s/revise',
         customerOrderMarkInTransit: '/api/v1/customers/%s/orders/%s/mark_in_transit',
         customerOrderMarkDelivered: '/api/v1/customers/%s/orders/%s/mark_delivered',
+        ediBase: '/api/v2/edi',
+        ediCreate: '/api/v2/edi/request',
+        ediGetBySequence: '/api/v2/edi/load_sequence',
     },
 };
 
@@ -34,6 +38,36 @@ export function getOrder(token, orderId) {
             Authorization: `${config.tokenType} ${token}`,
         },
         url: `${BASE_API_URL}${format(config.urls.orders)}/${orderId}`,
+    });
+}
+
+// getOrderWithSSCC18 will communicate with the RoseRocket System to retrieve Order details by way of the
+// orderID provided in the Webhook Request, and include the expected SSCC-18 labels
+export function getOrderWithSSCC18(token, orderId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.orders)}/${orderId}?additional_info=edi`,
+    });
+}
+
+// getRequestEDITransaction will communicate with the RoseRocket System to retrieve Order details by way of the
+// orderID provided in the Webhook Request, and include the expected SSCC-18 labels
+export function getRequestEDITransaction(token, orders) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(ediCreate)}`,
+        data: orders,
+        method: 'post',
     });
 }
 
@@ -97,19 +131,31 @@ export function markDelivered(token, customerId, orderId, data = {}) {
 // library, as the request body from RoseRocket Webhooks will be missing items expected by our
 // 'instructions', particularly those dealing with the ISA Interchange Control Header.
 // Our default EDI Instructions also includes the deadline for response, set below as 'respondBy'
-export function generateEdiRequestBody(orders) {
+export function generateEdiRequestBody(orders, options = {}) {
     // Must responde by 12 hours from now
     const respondBy = moment()
         .add(12, 'hours')
         .toISOString();
+    const gcn = options.groupControlNumber || '0001';
+    var edi = {
+        companyName: ISA_COMPANY_NAME,
+        interchangeSenderId: ISA_INTERCHANGE_SENDER_ID,
+        interchangeReceiverId: ISA_INTERCHANGE_RECEIVER_ID,
+        groupControlNumber: gcn,
+    };
+
+    if (options.segmentTerminator) {
+        edi.segmentTerminator = options.segmentTerminator;
+    }
+
+    if (options.verbose) {
+        printFuncLog('generateEdiRequestBody', edi);
+    }
+
     return {
-        __edi: {
-            companyName: ISA_COMPANY_NAME,
-            interchangeSenderId: ISA_INTERCHANGE_SENDER_ID,
-            interchangeReceiverId: ISA_INTERCHANGE_RECEIVER_ID,
-        },
+        __edi: edi,
         __vars: {
-            groupControlNumber: '0001',
+            ...options.__vars,
             respondBy,
         },
         orders: orders,

@@ -3,6 +3,7 @@ import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import moment from 'moment';
 import * as aws from './aws.js';
+const util = require('util');
 
 const {
     LOCAL_SYNC_DIRECTORY,
@@ -53,7 +54,7 @@ export function printFuncLog(functionName, obj) {
         checkDirectoryStatus(LOG_DIRECTORY);
         const msg = `[LOGGER] [${moment(new Date()).format(
             'YYYY-MM-DD HH:mm:ss'
-        )}] [${functionName}]: ${obj}`;
+        )}] [${functionName}]: ${util.inspect(obj, false, null, true)}`;
         const logFile = fs.createWriteStream(
             `${LOG_DIRECTORY}/${moment(new Date()).format('YYYYMMDD')}.info`,
             { flags: 'a' }

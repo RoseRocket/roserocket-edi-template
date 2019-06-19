@@ -8,6 +8,7 @@ import {
     readLocalJsonFile,
     printFuncError,
     printFuncWarning,
+    printFuncLog,
     retrieveInboundFiles,
     generateFileNames,
     sendAndBackupFile,
@@ -16,6 +17,7 @@ import {
 } from '../utils/utils';
 import * as aws from '../utils/aws';
 import * as rrapi from '../api/rrApi.js';
+import * as ediOutHelpers from '../out/edi.js';
 
 const {
     ORG_NAME,
@@ -103,14 +105,25 @@ export function create856FromRoseRocket(req, res, next) {
                     return;
                 }
                 rrapi
-                    .getOrder(res1.access_token, orderID)
+                    .getOrderWithSSCC18(res1.access_token, orderID)
                     .then(function(res2) {
                         if (!res2) {
                             error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
                             return next({ error });
                         }
-                        const orders = [res2.order]; // <--- RR integration webhook expects single order requests
-                        const data = generateEdiRequestBody(orders);
+                        const orderData = ediOutHelpers.processOrderForASN([res2.order]); // <--- RR integration webhook expects single order requests
+
+                        const data = generateEdiRequestBody(orderData.orders, {
+                            groupControlNumber: 'asdf',
+                            segmentTerminator: '~\n',
+                            verbose: true,
+                            __vars: {
+                                totalHL: orderData.totalHL,
+                                totalPcs: orderData.totalPcs,
+                            },
+                        });
+                        printFuncLog('create856FromRoseRocket', data);
+                        /*
 
                         // generate 204 EDI data for that company
                         generateEDI(ediType, data)
@@ -122,6 +135,7 @@ export function create856FromRoseRocket(req, res, next) {
                                 sendAndBackupFile(res, filePath, tmpPath);
                             })
                             .catch(err => printFuncError('create856FromRoseRocket', err));
+                            */
                     })
                     .catch(err => printFuncError('create856FromRoseRocket', err));
             })

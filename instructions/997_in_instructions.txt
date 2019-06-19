@@ -1,8 +1,8 @@
 {
     "__edi": {
         "companyName": "Test Company",
-        "interchangeSenderId": "TT",
-        "interchangeReceiverId": "TTXG",
+        "interchangeSenderId": "[INTERCHANGE_SENDER_ID]",
+        "interchangeReceiverId": "[INTERCHANGE_RECEIVER_ID]",
         "elementTerminator": "*",
         "segmentTerminator": "\n"
     },

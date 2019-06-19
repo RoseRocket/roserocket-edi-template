@@ -73,7 +73,7 @@
                                                             "name": "HL01",
                                                             "description": "N/A",
                                                             "type": "value",
-                                                            "value": "1"
+                                                            "value": "order.__value.transmissionNum"
                                                         },
                                                         {
                                                             "name": "HL02",
@@ -429,14 +429,14 @@
                                                         {
                                                             "name": "HL01",
                                                             "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "2"
+                                                            "type": "fromJson",
+                                                            "value": "order.__value.orderNum"
                                                         },
                                                         {
                                                             "name": "HL02",
                                                             "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "1"
+                                                            "type": "fromJson",
+                                                            "value": "order.__value.transmissionNum"
                                                         },
                                                         {
                                                             "name": "HL03",
@@ -543,13 +543,13 @@
                                                             "name": "HL01",
                                                             "description": "N/A",
                                                             "type": "value",
-                                                            "value": "3"
-                                                       },
+                                                            "value": "2"
+                                                        },
                                                         {
                                                             "name": "HL02",
                                                             "description": "N/A",
-                                                            "type": "value",
-                                                            "value": "2"
+                                                            "type": "fromJson",
+                                                            "value": "order.__value.orderNum"
                                                         },
                                                         {
                                                             "name": "HL03",
