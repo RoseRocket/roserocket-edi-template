@@ -2,7 +2,7 @@ import fs from 'fs';
 import { generateEDI, parseEDI } from '../api/ediGambitApi';
 import { generateEdiRequestBody } from '../api/rrApi';
 import { EDI_TYPES, EDI_997_STATUS_TYPES } from '../constants/constants';
-import { rrAuthenticate } from '../utils/rrAuthenticate.js';
+import { rrAuthenticate, rrAuthenticateWithSubdomain } from '../utils/rrAuthenticate.js';
 import {
     readLocalFile,
     readLocalJsonFile,
@@ -19,7 +19,6 @@ import {
 import * as aws from '../utils/aws';
 import * as rrapi from '../api/rrApi.js';
 import * as ediOutHelpers from '../out/edi.js';
-import { resolveCname } from 'dns';
 
 const {
     ORG_NAME,
@@ -97,7 +96,7 @@ export function create856FromRoseRocket(req, res, next) {
         const ediType = '856';
 
         orderID = order.id || order_id;
-        rrAuthenticate()
+        rrAuthenticateWithSubdomain(req.query.subdomain)
             .then((res1 = {}) => {
                 if (!res1.access_token) {
                     printFuncError(
@@ -132,6 +131,8 @@ export function create856FromRoseRocket(req, res, next) {
 
                                 const data = generateEdiRequestBody(orderData.orders, {
                                     groupControlNumber: orderData.groupControlNumber,
+                                    transactionSetHeader: ediType,
+                                    functionalGroupHeader: 'SH',
                                     segmentTerminator: '~\n',
                                     __vars: {
                                         totalHL: orderData.totalHL,
@@ -506,7 +507,6 @@ export function markFileAsError(fileName, functionName, msg, verbose) {
 // internal records to match the IDs in your system
 export function acknowledgeASN(ediData) {
     return new Promise((resolve, reject) => {
-        printFuncLog('acknowledgeASN', ediData);
         const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
         if (gcnId == '') {
             reject('Could not load GroupControlID');
@@ -520,12 +520,14 @@ export function acknowledgeASN(ediData) {
                     reject('Authorization Failed - Check Org credentials in environment settings.');
                     return;
                 }
+
                 authToken = res1.access_token;
-                var currentOrgId = 'e12ad5e7-1270-461a-8fa5-c42b620c4a3a';
                 ediOutHelpers
-                    .loadEDITransaction(authToken, gcnId, currentOrgId)
+                    .loadEDITransaction(authToken, gcnId, res1.orgId)
                     .then(function(res2) {
                         const { edi_group: ediGroup = {} } = res2;
+
+                        authToken = res2.authToken;
                         ediGroup.response_status =
                             EDI_997_STATUS_TYPES[ediData.gcn_status.toUpperCase()];
 
@@ -540,7 +542,6 @@ export function acknowledgeASN(ediData) {
                                         EDI_997_STATUS_TYPES[r.response_code.toUpperCase()];
                                 });
                         }
-                        printFuncLog('acknowledgeASN', ediGroup);
                         rrapi
                             .updateEDITransactionData(authToken, ediGroup)
                             .then(resolve)

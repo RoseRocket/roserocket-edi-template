@@ -203,6 +203,12 @@ export function generateEdiRequestBody(orders, options = {}) {
     if (options.segmentTerminator) {
         edi.segmentTerminator = options.segmentTerminator;
     }
+    if (options.ediType) {
+        edi.transactionSetHeader = `${options.ediType}`;
+    }
+    if (options.functionalGroupHeader) {
+        edi.functionalGroupHeader = `${options.functionalGroupHeader}`;
+    }
 
     if (options.verbose) {
         printFuncLog('generateEdiRequestBody', edi);
