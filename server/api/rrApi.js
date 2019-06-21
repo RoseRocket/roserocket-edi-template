@@ -21,9 +21,9 @@ export const config = {
         customerOrderRevise: '/api/v1/customers/%s/orders/%s/revise',
         customerOrderMarkInTransit: '/api/v1/customers/%s/orders/%s/mark_in_transit',
         customerOrderMarkDelivered: '/api/v1/customers/%s/orders/%s/mark_delivered',
-        ediBase: '/api/v2/edi',
+        ediBase: '/api/v2/edi/%s',
         ediCreate: '/api/v2/edi/request',
-        ediGetBySequence: '/api/v2/edi/load_sequence',
+        ediGetBySequence: '/api/v2/edi/load_sequence?sequence_id=%s',
     },
 };
 
@@ -55,8 +55,8 @@ export function getOrderWithSSCC18(token, orderId) {
     });
 }
 
-// getRequestEDITransaction will communicate with the RoseRocket System to retrieve Order details by way of the
-// orderID provided in the Webhook Request, and include the expected SSCC-18 labels
+// getRequestEDITransaction will communicate with the RoseRocket System to retrieve a new set of
+// EDI Transaction Data
 export function getRequestEDITransaction(token, orders) {
     var ordersData = [];
     var counter = 0;
@@ -75,9 +75,54 @@ export function getRequestEDITransaction(token, orders) {
             'Content-Type': 'application/json;charset=utf-8',
             Authorization: `${config.tokenType} ${token}`,
         },
-        url: `${BASE_API_URL}${format(config.urls.ediCreate)}`,
+        url: `${BASE_API_URL}${config.urls.ediCreate}`,
         data: { orders: ordersData },
         method: 'post',
+    });
+}
+
+// getEDIBaseInformationByRequestID will communicate with the RoseRocket System to retrieve the Base
+// information required to load an EDI transaction by
+export function getEDIBaseInformationByRequestID(token, sequenceId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediGetBySequence, sequenceId)}`,
+    });
+}
+
+// loadEDITransactionData will communicate with the RoseRocket System to retrieve an existing set of
+// EDI Transaction information, base on the data received from getEDIBaseInformationByRequestID
+export function loadEDITransactionData(token, gcnId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediBase, gcnId)}`,
+    });
+}
+
+// updateEDITransactionData will communicate with the RoseRocket System update the information
+// for a given EDI transaction. Depending on the nature of the update, this may also include order
+// notifications for rejected orders
+export function updateEDITransactionData(token, ediGroup) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediBase, ediGroup.id)}`,
+        data: ediGroup,
+        method: 'put',
     });
 }
 

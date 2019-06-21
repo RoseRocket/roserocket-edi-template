@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { generateEDI, parseEDI } from '../api/ediGambitApi';
 import { generateEdiRequestBody } from '../api/rrApi';
-import { EDI_TYPES } from '../constants/constants';
+import { EDI_TYPES, EDI_997_STATUS_TYPES } from '../constants/constants';
 import { rrAuthenticate } from '../utils/rrAuthenticate.js';
 import {
     readLocalFile,
@@ -14,10 +14,12 @@ import {
     sendAndBackupFile,
     quickResponse,
     localFileMove,
+    trimLeadingZeroes,
 } from '../utils/utils';
 import * as aws from '../utils/aws';
 import * as rrapi from '../api/rrApi.js';
 import * as ediOutHelpers from '../out/edi.js';
+import { resolveCname } from 'dns';
 
 const {
     ORG_NAME,
@@ -254,7 +256,7 @@ export function timedFileProcess(files = {}) {
         return;
     }
     const file = files.shift();
-    const fileTypes = [EDI_TYPES['990'], EDI_TYPES['214']];
+    const fileTypes = [EDI_TYPES['997'], EDI_TYPES['864']];
     for (const fileType of fileTypes)
         if (file.includes(`${fileType}_`)) {
             markFileAsProcessing(file)
@@ -301,19 +303,31 @@ export function processFile(file, ediType) {
                             switch (ediType) {
                                 case EDI_TYPES['990']:
                                     updateOrderExternalID(order).catch(err =>
-                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                        markFileAsError(
+                                            file,
+                                            `processFile - updateOrderExternalID - ${ediType}`,
+                                            err
+                                        )
                                     );
                                     break;
 
                                 case EDI_TYPES['214']:
                                     updateOrderStatus(order).catch(err =>
-                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                        markFileAsError(
+                                            file,
+                                            `processFile - updateOrderStatus - ${ediType}`,
+                                            err
+                                        )
                                     );
                                     break;
 
                                 case EDI_TYPES['997']:
                                     acknowledgeASN(order).catch(err =>
-                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                        markFileAsError(
+                                            file,
+                                            `processFile - acknowledgeASN - ${ediType}`,
+                                            err
+                                        )
                                     );
                                     break;
                             }
@@ -481,7 +495,7 @@ export function markFileAsSuccess(fileName) {
 
 // Maintain a local backup of files that were succesfully marked as processing but encountered an error
 export function markFileAsError(fileName, functionName, msg, verbose) {
-    if (verbose) {
+    if (verbose || true) {
         printFuncError(functionName, msg);
     }
     printFuncError(functionName, `Error Updating from file -- ${fileName}`);
@@ -490,10 +504,14 @@ export function markFileAsError(fileName, functionName, msg, verbose) {
 
 // RR Integration function, only dealing with approved 990s, this function updates Roserocket's
 // internal records to match the IDs in your system
-export function acknowledgeASN(orderData) {
+export function acknowledgeASN(ediData) {
     return new Promise((resolve, reject) => {
-        /*
-        const orderID = `full_id:${orderData.full_id}`;
+        printFuncLog('acknowledgeASN', ediData);
+        const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
         //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
         let authToken;
         rrAuthenticate()
@@ -503,28 +521,33 @@ export function acknowledgeASN(orderData) {
                     return;
                 }
                 authToken = res1.access_token;
-                return rrapi.getOrder(authToken, orderID);
+                var currentOrgId = 'e12ad5e7-1270-461a-8fa5-c42b620c4a3a';
+                ediOutHelpers
+                    .loadEDITransaction(authToken, gcnId, currentOrgId)
+                    .then(function(res2) {
+                        const { edi_group: ediGroup = {} } = res2;
+                        ediGroup.response_status =
+                            EDI_997_STATUS_TYPES[ediData.gcn_status.toUpperCase()];
+
+                        for (const r of ediData.responses) {
+                            ediGroup.orders
+                                .filter(
+                                    o =>
+                                        o.transaction_set_number == trimLeadingZeroes(`${r.tsn_id}`)
+                                )
+                                .forEach(function(e) {
+                                    e.response_status =
+                                        EDI_997_STATUS_TYPES[r.response_code.toUpperCase()];
+                                });
+                        }
+                        printFuncLog('acknowledgeASN', ediGroup);
+                        rrapi
+                            .updateEDITransactionData(authToken, ediGroup)
+                            .then(resolve)
+                            .catch(reject);
+                    })
+                    .catch(reject);
             })
-            .then(function(res2) {
-                if (!res2) {
-                    reject(
-                        `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`
-                    );
-                    return;
-                }
-                const { order = {} } = res2;
-                const { customer = {} } = order;
-                //'Revise' Platform API endpoint only requires the fields that are being updated; for safety, only send the external_id
-                return rrapi.reviseOrder(authToken, customer.id, order.id, {
-                    external_id: orderData.external_id,
-                });
-            })
-            .then(resolve)
             .catch(reject);
-            */
-        if (orderData.ID != 'asdf') {
-            reject('This will fail');
-        }
-        resolve();
     });
 }

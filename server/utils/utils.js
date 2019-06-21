@@ -317,3 +317,7 @@ export function getInstructions(ediType, method) {
         return { error };
     }
 }
+
+export function trimLeadingZeroes(value = '') {
+    return value.replace(/^0+/, '');
+}

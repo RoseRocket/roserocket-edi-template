@@ -11,3 +11,11 @@ export const EDI_TYPES = {
     990: '990',
     997: '997',
 };
+
+// This is a direct mapping from EDI Acknowledgment files to internal data types
+export const EDI_997_STATUS_TYPES = {
+    A: 'accepted',
+    E: 'accepted',
+    R: 'declined',
+    P: 'partial-acceptance',
+};
