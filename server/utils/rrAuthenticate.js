@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
 
 export function rrAuthenticateWithSubdomain(subdomain) {
-    return rrAuthenticate(ENVIRONMENT_VARS.find(env => (env.SUBDOMAIN = subdomain)).ID);
+    return rrAuthenticate(ENVIRONMENT_VARS.find(env => env.SUBDOMAIN == subdomain).ID);
 }
 export function rrAuthenticate(orgId = DEFAULT_ENVIRONMENT) {
     return new Promise((resolve, reject) => {
