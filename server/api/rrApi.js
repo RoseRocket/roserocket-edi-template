@@ -59,15 +59,14 @@ export function getOrderWithSSCC18(token, orderId) {
 // EDI Transaction Data
 export function getRequestEDITransaction(token, orders) {
     var ordersData = [];
-    var counter = 0;
     for (const order of orders) {
-        counter++;
         var o = {
             order_id: order.id,
-            transaction_set_number: counter,
+            transaction_set_number: 1,
         };
         ordersData.push(o);
     }
+
     return baseRequest({
         timeout: config.timeout,
         headers: {

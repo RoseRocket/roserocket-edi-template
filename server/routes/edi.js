@@ -92,10 +92,16 @@ export function create856FromRoseRocket(req, res, next) {
     try {
         let orderID;
         let error;
-        const { order = {}, order_id } = req.body;
+        const { order = {}, order_ids = [], order_id } = req.body;
         const ediType = '856';
 
+        var orderIDs = [];
         orderID = order.id || order_id;
+        if ((orderID === undefined || orderID == '') && order_ids.length > 0) {
+            orderIDs = order_ids;
+        } else {
+            orderIDs[0] = orderID;
+        }
         rrAuthenticateWithSubdomain(req.query.subdomain)
             .then((res1 = {}) => {
                 if (!res1.access_token) {
@@ -105,16 +111,15 @@ export function create856FromRoseRocket(req, res, next) {
                     );
                     return;
                 }
-                rrapi
-                    .getOrderWithSSCC18(res1.access_token, orderID)
+                ediOutHelpers
+                    .recursiveLoadUCCData(res1.access_token, orderIDs, [])
                     .then(function(res2) {
                         if (!res2) {
                             error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
                             return next({ error });
                         }
 
-                        //printFuncLog('create856FromRoseRocket', orderData);
-                        var orders = [res2.order];
+                        const { orders = [] } = res2;
 
                         rrapi
                             .getRequestEDITransaction(res1.access_token, orders)
@@ -140,10 +145,6 @@ export function create856FromRoseRocket(req, res, next) {
                                     },
                                 });
 
-                                printFuncLog(
-                                    'create856FromRoseRocket - requestEDI - Generic Log',
-                                    data
-                                );
                                 // generate 856 EDI data for that company
                                 generateEDI(ediType, data)
                                     .then(function(res = {}) {
