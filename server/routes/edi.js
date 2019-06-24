@@ -257,17 +257,23 @@ export function timedFileProcess(files = {}) {
         return;
     }
     const file = files.shift();
+    const fileContent = fs.readFileSync(`${LOCAL_SYNC_DIRECTORY}/${file}`, 'utf8');
+
+    // SEARCH FILE FOR EDI CONTEXT
+    const matcher = /\nST\*[0-9]{2,3}\*/g;
+    var ediType = `${fileContent.match(matcher)}`.replace(/\D/g, '');
+
     const fileTypes = [EDI_TYPES['997'], EDI_TYPES['864']];
-    for (const fileType of fileTypes)
-        if (file.includes(`${fileType}_`)) {
-            markFileAsProcessing(file)
-                .then(res => {
-                    processFile(file, fileType);
-                })
-                .catch(err => {
-                    markFileAsError(file, `timedFileProcess - ${file} - error`, err, true);
-                });
-        }
+    if (ediType != '' && fileTypes.includes(ediType)) {
+        printFuncLog('FileTypeMatch:', ediType);
+        markFileAsProcessing(file)
+            .then(res => {
+                processFile(file, ediType);
+            })
+            .catch(err => {
+                markFileAsError(file, `timedFileProcess - ${file} - error`, err, true);
+            });
+    }
     setTimeout(function() {
         timedFileProcess(files);
     }, PROCESS_DELAY);
