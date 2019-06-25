@@ -1,7 +1,12 @@
 import fs from 'fs';
 import { generateEDI, parseEDI } from '../api/ediGambitApi';
 import { generateEdiRequestBody } from '../api/rrApi';
-import { EDI_TYPES, EDI_997_STATUS_TYPES } from '../constants/constants';
+import {
+    EDI_TYPES,
+    EDI_997_STATUS_TYPES,
+    EDI_997_STATUS_DEFAULT_MESSAGES,
+    EDI_867_ERROR_CODES,
+} from '../constants/constants';
 import { rrAuthenticate, rrAuthenticateWithSubdomain } from '../utils/rrAuthenticate.js';
 import {
     readLocalFile,
@@ -32,6 +37,9 @@ const {
 const downloadAction = `${SOURCE_EDI_DOWNLOAD_MODE}`.toUpperCase();
 const SUPPORTED_ORDER_STATUSES = { in_transit: 'AF', delivered: 'X1' };
 const PROCESS_DELAY = 1000;
+const EDI_TYPE_SEARCH = /\nST\*[0-9]{2,3}\*/g;
+const EDI_ERROR_ASN_START = /[- ]{5,}/g;
+const EDI_ERROR_ASN_MSG_PARSE = /^[0-9]* (IB|J)[0-9]* /g;
 
 // create204FromRoseRocket is a function called from the only webhook that's currently configured
 // in the server.js file. As the name would imply, it creates a 204 EDI file from the records that
@@ -261,12 +269,10 @@ export function timedFileProcess(files = {}) {
     const fileContent = fs.readFileSync(`${LOCAL_SYNC_DIRECTORY}/${file}`, 'utf8');
 
     // SEARCH FILE FOR EDI CONTEXT
-    const matcher = /\nST\*[0-9]{2,3}\*/g;
-    var ediType = `${fileContent.match(matcher)}`.replace(/\D/g, '');
-
+    var ediType = `${fileContent.match(EDI_TYPE_SEARCH)}`.replace(/\D/g, '');
     const fileTypes = [EDI_TYPES['997'], EDI_TYPES['864']];
     if (ediType != '' && fileTypes.includes(ediType)) {
-        printFuncLog('FileTypeMatch:', ediType);
+        printFuncLog('FileTypeMatch:', { ediType, file });
         markFileAsProcessing(file)
             .then(res => {
                 processFile(file, ediType);
@@ -296,8 +302,8 @@ export function processFile(file, ediType) {
                     if (!groups.length) {
                         markFileAsError(
                             file,
-                            `processFile - ${ediType} - Order Data Missing`,
-                            `Order Data Missing`,
+                            `processFile - ${ediType} - Message Data Missing`,
+                            `Message Data Missing`,
                             true
                         );
                         return;
@@ -331,6 +337,15 @@ export function processFile(file, ediType) {
 
                                 case EDI_TYPES['997']:
                                     acknowledgeASN(order).catch(err =>
+                                        markFileAsError(
+                                            file,
+                                            `processFile - acknowledgeASN - ${ediType}`,
+                                            err
+                                        )
+                                    );
+                                    break;
+                                case EDI_TYPES['864']:
+                                    markASNasError(order, file).catch(err =>
                                         markFileAsError(
                                             file,
                                             `processFile - acknowledgeASN - ${ediType}`,
@@ -510,8 +525,7 @@ export function markFileAsError(fileName, functionName, msg, verbose) {
     localFileMove(`${LOCAL_SYNC_DIRECTORY}/processing`, `${DOWNLOAD_ERROR_DIR}`, fileName, true);
 }
 
-// RR Integration function, only dealing with approved 990s, this function updates Roserocket's
-// internal records to match the IDs in your system
+// acknowledgeASN will load the associated ASN and respond with the appropriate
 export function acknowledgeASN(ediData) {
     return new Promise((resolve, reject) => {
         const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
@@ -545,8 +559,9 @@ export function acknowledgeASN(ediData) {
                                         o.transaction_set_number == trimLeadingZeroes(`${r.tsn_id}`)
                                 )
                                 .forEach(function(e) {
-                                    e.response_status =
-                                        EDI_997_STATUS_TYPES[r.response_code.toUpperCase()];
+                                    const responseCode = r.response_code.toUpperCase();
+                                    e.response_status = EDI_997_STATUS_TYPES[responseCode];
+                                    e.message = EDI_997_STATUS_DEFAULT_MESSAGES[responseCode];
                                 });
                         }
                         rrapi
@@ -555,6 +570,76 @@ export function acknowledgeASN(ediData) {
                             .catch(reject);
                     })
                     .catch(reject);
+            })
+            .catch(reject);
+    });
+}
+
+// markASNasError will process a file that's been identified as an 867 and attempt to update Roserocket
+// with the status changes.  This includes marking the order as rejected and including the message
+// within the internal notes of the order
+export function markASNasError(ediData, file) {
+    return new Promise((resolve, reject) => {
+        const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+
+                authToken = res1.access_token;
+
+                //consume message data and determine which lines can be evaluated for proper execution
+                var actionableLines = [];
+                for (const mit of ediData.messages) {
+                    var startAdding = false;
+                    for (const line of mit.lines) {
+                        if (line.message.match(EDI_ERROR_ASN_START)) {
+                            startAdding = true;
+                            continue;
+                        }
+                        if (startAdding) {
+                            const ids = `${line.message.match(EDI_ERROR_ASN_MSG_PARSE)}`.split(' ');
+                            const message = line.message.replace(EDI_ERROR_ASN_MSG_PARSE, '');
+                            actionableLines.push({
+                                gcnId: trimLeadingZeroes(ids[0]),
+                                errorCode: ids[1],
+                                message,
+                            });
+                        }
+                    }
+                }
+
+                // run the update code for any actionable lines; make sure each execution can flag file
+                // as having encounterd an error
+                for (const errMessage of actionableLines) {
+                    ediOutHelpers
+                        .loadEDITransaction(authToken, errMessage.gcnId, res1.orgId)
+                        .then(function(res2) {
+                            const { edi_group: ediGroup = {} } = res2;
+
+                            authToken = res2.authToken;
+                            ediGroup.orders.forEach(function(e) {
+                                e.response_status = EDI_997_STATUS_TYPES['R'];
+                                e.message = `${
+                                    EDI_867_ERROR_CODES[errMessage.errorCode]
+                                } \nDetails:${errMessage.message} \n${file}`;
+                            });
+                            rrapi.updateEDITransactionData(authToken, ediGroup).catch(reject);
+                        })
+                        .catch(err => {
+                            markFileAsError(file, `markASNasError - loadEDITransaciton - 867`, err);
+                        });
+                }
+
+                resolve({ success: true });
             })
             .catch(reject);
     });

@@ -1,5 +1,6 @@
 import { baseRequest } from './baseRequest.js';
 import { getInstructions } from '../utils/utils';
+import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
 
 const { EDI_READ_URL, EDI_WRITE_URL, EDI_ACCESS_TOKEN } = process.env;
 

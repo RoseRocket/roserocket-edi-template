@@ -1,0 +1,81 @@
+{
+    "__edi": {
+        "companyName": "Test Company",
+        "elementTerminator": "*",
+        "segmentTerminator": "\n"
+    },
+   "BMG": {
+        "type":"line",
+        "elements": [
+            {
+                "name": "BMG01",
+                "description": "Transaction Set Purpose Code",
+                "type": "toJson",
+                "path": "ts_code"
+            },
+            {
+                "name": "BMG02",
+                "description": "Description",
+                "type": "toJson",
+                "path": "gcn_id"
+            }
+        ]
+    },
+    "MIT": {
+        "type": "loopBlock",
+        "arrayName": "messages",
+        "instructions": {
+            "MIT": {
+                "type":"line",
+                "elements": [
+                    {
+                        "name": "MIT01",
+                        "description": "Reference Identification",
+                        "type": "toJson",
+                        "path": "ref_id"
+                    },
+                    {
+                        "name": "MIT02",
+                        "description": "N/A",
+                        "type": "skipElement"
+                    },
+                    {
+                        "name": "MIT03",
+                        "description": "Page Width (max characters per line)",
+                        "type": "toJson",
+                        "path": "max_line_length"
+                    },
+                    {
+                        "name": "MIT04",
+                        "description": "Page Length Lines",
+                        "type": "toJson",
+                        "path": "max_lines"
+                    }
+                ]
+            },
+            "MSG": {
+                "type": "loopBlock",
+                "arrayName": "lines",
+                "instructions": {
+                    "MSG": {
+                        "type":"line",
+                        "elements": [
+                            {
+                                "name": "MIT01",
+                                "description": "Message",
+                                "type": "toJson",
+                                "path": "message"
+                            },
+                            {
+                                "name": "MIT02",
+                                "description": "Printer Carriage Control Code",
+                                "type": "toJson",
+                                "path": "next_line_delimiter"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
