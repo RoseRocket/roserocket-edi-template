@@ -8,14 +8,21 @@ import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
 // In order to support multiple orgs, the rrAuthenticate function can be called with an orgID
 // which will load a org that may differ from the default.
 export function rrAuthenticateWithSubdomain(subdomain) {
-    return rrAuthenticate(ENVIRONMENT_VARS.find(env => env.SUBDOMAIN == subdomain).ID);
+    const env = ENVIRONMENT_VARS.find(env => env.SUBDOMAIN === `${subdomain}`);
+    if (env !== undefined) {
+        return rrAuthenticate(env.ID);
+    }
+    return rrAuthenticate();
 }
 
 // Generic auth function, will load org credentials from rrconstants file, if orgId is empty
 // it will use the 'Default Environment ID'
 export function rrAuthenticate(orgId = DEFAULT_ENVIRONMENT) {
     return new Promise((resolve, reject) => {
-        const ENV = ENVIRONMENT_VARS.find(env => env.ID == orgId);
+        const ENV = ENVIRONMENT_VARS.find(env => env.ID == orgId) || {};
+        if (!ENV.CREDENTIALS) {
+            reject(`Environment not configured for orgId. ${orgId}`);
+        }
         const TOKEN_FILE = ENV.TOKEN_FILE;
 
         const dir = path.dirname(TOKEN_FILE);

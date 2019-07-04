@@ -2,7 +2,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import moment from 'moment';
-const util = require('util');
+import util from 'util';
 
 const {
     LOG_DIRECTORY,

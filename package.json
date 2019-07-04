@@ -28,6 +28,7 @@
     "keywords": [],
     "dependencies": {
         "@babel/core": "7.4.3",
+        "await-of": "1.2.0",
         "body-parser": "1.11.0",
         "bootstrap": "3.3.7",
         "chalk": "2.3.0",

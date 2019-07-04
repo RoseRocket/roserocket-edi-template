@@ -64,15 +64,11 @@ export function getOrderWithSSCC18(token, orderId) {
 
 // getRequestEDITransaction will communicate with the RoseRocket System to retrieve a new set of
 // EDI Transaction Data
-export function getRequestEDITransaction(token, orders) {
-    var ordersData = [];
-    for (const order of orders) {
-        var o = {
-            order_id: order.id,
-            transaction_set_number: 1,
-        };
-        ordersData.push(o);
-    }
+export function getRequestEDITransaction(token, orders = []) {
+    let ordersData = orders.map(order => ({
+        order_id: order.id,
+        transaction_set_number: 1,
+    }));
 
     return baseRequest({
         timeout: config.timeout,
@@ -199,7 +195,7 @@ export function generateEdiRequestBody(orders, options = {}) {
         .toISOString();
     const currentTime = moment().toISOString();
     const gcn = options.groupControlNumber || '1';
-    var edi = {
+    const edi = {
         companyName: ISA_COMPANY_NAME,
         appSenderId: APP_INTERCHANGE_SENDER_ID,
         appReceiverId: APP_INTERCHANGE_RECEIVER_ID,
@@ -214,33 +210,21 @@ export function generateEdiRequestBody(orders, options = {}) {
         interchangeControlNumber: gcn.padStart(9, '0'),
     };
 
-    if (options.segmentTerminator) {
-        edi.segmentTerminator = options.segmentTerminator;
-    }
-    if (options.transactionSetHeader) {
-        edi.transactionSetHeader = options.transactionSetHeader;
-    }
-    if (options.functionalGroupHeader) {
-        edi.functionalGroupHeader = options.functionalGroupHeader;
-    }
-    if (options.acknowledgmentRequested) {
-        edi.acknowledgmentRequested = options.acknowledgmentRequested;
-    }
-    if (options.usageIndicator) {
-        edi.usageIndicator = options.usageIndicator;
-    }
-
     if (options.verbose) {
         printFuncLog('generateEdiRequestBody', edi);
+        delete options.verbose;
     }
 
     return {
-        __edi: edi,
+        __edi: {
+            ...edi,
+            ...options,
+        },
         __vars: {
             ...options.__vars,
             respondBy,
             currentTime,
         },
-        orders: orders,
+        orders: orders.shipments,
     };
 }

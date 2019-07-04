@@ -1,3 +1,4 @@
+import of from 'await-of';
 import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
 import * as rrapi from '../api/rrApi.js';
 import { rrAuthenticate } from '../utils/rrAuthenticate.js';
@@ -15,27 +16,29 @@ const DETAILS_TAG_REMOVAL = /[A-Z]*:[ ]*/g;
 // orders: { shipment: {BASIC_ORDER_DATA, orders: {order1, order2, etc... } } } where BASIC_ORDER_DATA contains
 // the shared origin/destination/shipper etc. etc.
 export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
-    var shipment = { ...shipmentData };
-    var orders = shipmentData.orders;
-    if (orders.length == 0) {
-        return null;
+    const { orders = [] } = shipmentData;
+    if (!orders.length) {
+        return {};
     }
 
-    var hlCounter = 0;
-    var totalPcs = 0;
-    var results = [];
-    shipment.transmissionNum = ++hlCounter;
-    shipment.totalPcs = 0;
-    shipment.totalWeight = 0;
-    shipment.asnNum = `${ediGroup.sequence_id}`;
-    shipment.default_weight_unit_id = shipment.default_weight_unit_id.toUpperCase();
+    let hlCounter = 0;
+    let totalPcs = 0;
+    let results = [];
+    let shipment = {
+        ...shipmentData,
+        transmissionNum: ++hlCounter,
+        totalPcs: 0,
+        totalWeight: 0,
+        asnNum: `${ediGroup.sequence_id}`,
+        default_weight_unit_id: shipmentData.default_weight_unit_id.toUpperCase(),
+    };
 
     //unnecessary fields, some light cleanup
     delete shipment.commodities;
     delete shipment.accessorials;
 
     // HD requirements; subsequent requests for an order musts have an alpha character, when re-transmitting
-    var ediOrder = ediGroup.orders.find(g => g.order_id == shipment.id);
+    let ediOrder = ediGroup.orders.find(g => g.order_id == shipment.id);
     if (ediOrder.attempt_number > 1) {
         const conversionCode = (ediOrder.attempt_number - 1) % 26;
         const charCode = String.fromCharCode(97 + conversionCode);
@@ -49,7 +52,7 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
             continue;
         }
 
-        var o = { ...order };
+        let o = { ...order };
 
         o.orderNum = ++hlCounter;
         o.totalPcs = 0;
@@ -59,13 +62,13 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
             o.destination.thd_destination_code = 'SN';
         }
 
-        var commodities = [];
+        let commodities = [];
         for (const commodity of order.commodities) {
             o.totalPcs += commodity.pieces;
 
             if (commodity.ucc_128_labels && commodity.ucc_128_labels.length > 0) {
                 // Attempt to calculate pcs per pallet/skid
-                var skidCounter = 0;
+                let skidCounter = 0;
                 const pcsPerPallet =
                     commodity.ucc_128_labels.length > 1
                         ? Math.ceil(commodity.pieces / commodity.quantity)
@@ -78,7 +81,7 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
                 // need a separate commodity entry for each pallet/tare
                 for (const label of commodity.ucc_128_labels) {
                     skidCounter++;
-                    var c = { ...commodity };
+                    let c = { ...commodity };
                     //unsetting labels list, and setting an individual label value for the EDIGambit Looper
                     delete c.ucc_128_labels;
 
@@ -127,13 +130,12 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         totalPcs += o.totalPcs;
         results.push(o);
     }
-
     const gcn = `${ediGroup.sequence_id}`;
     shipment.orders = results;
     return {
         shipments: [shipment],
         totalHL: hlCounter,
-        totalPcs: totalPcs,
+        totalPcs,
         groupControlNumber: gcn,
     };
 }
@@ -142,9 +144,9 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
 // to load the data.  From there, the function will determine if a different authToken (org) is necessary,
 // and will attempt to load it such that the call to load EDI by ID will succeed (the wrong auth will
 // result in an access denial error)
-export async function loadEDITransaction(authToken, gcnId, currentOrgId) {
+export function loadEDITransaction(authToken, gcnId, currentOrgId) {
     return new Promise((resolve, reject) => {
-        if (gcnId == '') {
+        if (!gcnId) {
             reject('Could not load GroupControlID');
         }
 
@@ -194,29 +196,26 @@ export async function loadEDITransaction(authToken, gcnId, currentOrgId) {
     });
 }
 
-// recursiveLoadUCCData will load UCC Data for multiple orderIDs, and return it as an order array.
-export function recursiveLoadUCCData(authToken, orderIDs = [], orders = []) {
-    return new Promise((resolve, reject) => {
+// loadUCCData will load UCC Data for multiple orderIDs, and return it as an order array.
+export async function loadUCCData(authToken, orderIDs = [], orders = []) {
+    try {
         if (orderIDs.length <= 0) {
-            resolve({ orders });
-            return;
+            return { orders };
         }
-        const orderID = orderIDs.pop();
-        rrapi
-            .getOrderWithSSCC18(authToken, orderID)
-            .then(function(res) {
-                if (!res) {
-                    error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
-                    return next({ error });
-                }
 
-                orders.push(res.order);
-                return recursiveLoadUCCData(authToken, orderIDs, orders);
-            })
-            .then(resolve)
-            .catch(err => {
-                printFuncError('recursiveLoadUCCData - GetOrderWithSSCC18', err);
-                reject(err);
-            });
-    });
+        for (const orderID of orderIDs) {
+            const [res, err] = await of(rrapi.getOrderWithSSCC18(authToken, orderID));
+            if (err) {
+                throw err;
+            }
+
+            if (!res) {
+                throw `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
+            }
+            orders.push(res.order);
+        }
+        return { orders };
+    } catch (err) {
+        throw err;
+    }
 }

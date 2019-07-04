@@ -98,7 +98,7 @@ export function create856FromRoseRocket(req, res, next) {
         const { order = {}, order_ids = [], order_id } = req.body;
         const ediType = '856';
 
-        var orderIDs = [];
+        let orderIDs = [];
         orderID = order.id || order_id;
         if ((orderID === undefined || orderID == '') && order_ids.length > 0) {
             orderIDs = order_ids;
@@ -115,7 +115,7 @@ export function create856FromRoseRocket(req, res, next) {
                     return;
                 }
                 ediOutHelpers
-                    .recursiveLoadUCCData(res1.access_token, orderIDs, [])
+                    .loadUCCData(res1.access_token, orderIDs, [])
                     .then(function(res2) {
                         if (!res2) {
                             error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
@@ -132,7 +132,7 @@ export function create856FromRoseRocket(req, res, next) {
                                     return next({ error });
                                 }
                                 const { edi_group = {} } = res3;
-                                var shipment = {
+                                let shipment = {
                                     ...orders[0],
                                     orders,
                                 };
@@ -141,7 +141,7 @@ export function create856FromRoseRocket(req, res, next) {
                                     edi_group
                                 ); // <--- RR integration webhook expects single order requests
 
-                                const data = generateEdiRequestBody([shipment], {
+                                const data = generateEdiRequestBody(orderData, {
                                     groupControlNumber: orderData.groupControlNumber,
                                     transactionSetHeader: ediType,
                                     functionalGroupHeader: 'SH',
@@ -275,7 +275,7 @@ export function timedFileProcess(files = {}) {
     const fileContent = fs.readFileSync(`${LOCAL_SYNC_DIRECTORY}/${file}`, 'utf8');
 
     // SEARCH FILE FOR EDI CONTEXT
-    var ediType = `${fileContent.match(EDI_TYPE_SEARCH)}`.replace(/\D/g, '');
+    let ediType = `${fileContent.match(EDI_TYPE_SEARCH)}`.replace(/\D/g, '');
     const fileTypes = [EDI_TYPES['997'], EDI_TYPES['864']];
     if (ediType != '' && fileTypes.includes(ediType)) {
         util.printFuncLog('FileTypeMatch:', { ediType, file });
@@ -623,9 +623,9 @@ export function markASNasError(ediData, file) {
                 authToken = res1.access_token;
 
                 //consume message data and determine which lines can be evaluated for proper execution
-                var actionableLines = [];
+                let actionableLines = [];
                 for (const mit of ediData.messages) {
-                    var startAdding = false;
+                    let startAdding = false;
                     for (const line of mit.lines) {
                         if (line.message.match(EDI_ERROR_ASN_START)) {
                             startAdding = true;
