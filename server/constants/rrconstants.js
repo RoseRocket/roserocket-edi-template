@@ -44,6 +44,18 @@ export const ENVIRONMENT_VARS = [
                 'nfgDsc2WD8F2qNfHK5a84jjJkwzDkh9h2fhfUVuS9jZ8uVbhV3vC5AWX39IVUWSP2NcHciWvqZTa2N95RxRTZHWUsaD6HEdz0ThbXfQ6pYSQ3n267l1VQKGNbSuJE9fQ',
         },
     },
+    {
+        ID: 'e48fcf0b-4f44-441a-96ec-41b4a4b372ed',
+        SUBDOMAIN: 'bret',
+        TOKEN_FILE: '/tmp/edi/token3.jwt',
+        CREDENTIALS: {
+            USERNAME: 'bret.d@roserocket.com',
+            PASSWORD: 'password',
+            CLIENT_ID: 'b6c3b863-795e-448d-8e27-09ae31a4ab5f',
+            CLIENT_SECRET:
+                'BpLnfgDsc2WD8F2qNfHK5a84jjJkwzDkh9h2fhfUVuS9jZ8uVbhV3vC5AWX39IVUWSP2NcHciWvqZTa2N95RxRTZHWUsaD6HEdz0ThbXfQ6pYSQ3n267l1VQKGNbSuJE',
+        },
+    },
 ];
 
-export const DEFAULT_ENVIRONMENT = '6d3eedd7-5cb4-4355-973d-4257152230ec';
+export const DEFAULT_ENVIRONMENT = 'e48fcf0b-4f44-441a-96ec-41b4a4b372ed';

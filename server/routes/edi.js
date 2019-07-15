@@ -11,6 +11,7 @@ import { rrAuthenticate, rrAuthenticateWithSubdomain } from '../utils/rrAuthenti
 import * as util from '../utils/utils';
 import * as aws from '../utils/aws';
 import * as sftp from '../utils/sftp';
+import * as ftp from '../utils/ftp';
 import * as rrapi from '../api/rrApi.js';
 import * as ediOutHelpers from '../out/edi.js';
 
@@ -19,6 +20,8 @@ const {
     AWS_IN_ENDPOINT,
     SFTP_OUT_ENDPOINT,
     SFTP_IN_ENDPOINT,
+    FTP_OUT_ENDPOINT,
+    FTP_IN_ENDPOINT,
     DOWNLOAD_SUCCESS_DIR,
     DOWNLOAD_ERROR_DIR,
     FILE_IN,
@@ -506,6 +509,11 @@ export function markFileAsProcessing(file) {
                     .then(resolve)
                     .catch(reject);
                 return;
+            case 'FTP':
+                ftp.markFileAsProcessing(localFilePath, file)
+                    .then(resolve)
+                    .catch(reject);
+                return;
             default:
                 try {
                     // to copy the markFileAsProcessing feature, after moving the file we make a copy in the
@@ -699,6 +707,12 @@ export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
                 util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
             });
             return;
+        case 'FTP':
+            ftp.fileCopy(tmpPath, FTP_OUT_ENDPOINT).catch(error => {
+                util.printFuncError('sendAndBackupFile - AFTER', error); // print call stack
+                util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+            });
+            return;            
         default:
             err = util.writeStringResultToFile(content, filePath);
             break;
@@ -721,6 +735,8 @@ export function retrieveInboundFiles() {
             return aws.fileSync(AWS_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY, false);
         case 'SFTP':
             return sftp.fileSyncFromSFTP(SFTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
+        case 'FTP':
+                return ftp.fileSyncFromFTP(FTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
         default:
             return new Promise((resolve, reject) => {
                 try {
