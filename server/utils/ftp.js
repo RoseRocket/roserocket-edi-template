@@ -30,6 +30,7 @@ export function fileCopy(src, dest) {
     const ftp = new PromiseFtp();
     return new Promise((resolve, reject) => {
         ftp.connect(connectionConfig)
+            .then(() => ftp.ascii())
             .then(() => ftp.put(src, location))
             .then(() => ftp.end())
             .then(resolve)
