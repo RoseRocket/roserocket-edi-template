@@ -118,14 +118,21 @@ export function create856FromRoseRocket(req, res, next) {
                     return;
                 }
                 ediOutHelpers
-                    .loadUCCData(res1.access_token, orderIDs, [])
+                    .loadUCCData(res1.access_token, res1.orgId, orderIDs, [])
                     .then(function(res2) {
                         if (!res2) {
                             error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
-                            return next({ error });
+                            return { error };
                         }
 
                         const { orders = [] } = res2;
+
+                        if (!orders.length) {
+                            return {
+                                success: true,
+                                message: 'ASN not required.',
+                            };
+                        }
 
                         rrapi
                             .getRequestEDITransaction(res1.access_token, orders)

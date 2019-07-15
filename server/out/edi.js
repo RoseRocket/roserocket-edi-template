@@ -1,5 +1,6 @@
 import of from 'await-of';
 import { printFuncError, printFuncWarning, printFuncLog } from '../utils/utils';
+import { ENVIRONMENT_VARS, DEFAULT_ENVIRONMENT } from '../constants/rrconstants';
 import * as rrapi from '../api/rrApi.js';
 import { rrAuthenticate } from '../utils/rrAuthenticate.js';
 const { ORG_NAME } = process.env;
@@ -197,9 +198,18 @@ export function loadEDITransaction(authToken, gcnId, currentOrgId) {
 }
 
 // loadUCCData will load UCC Data for multiple orderIDs, and return it as an order array.
-export async function loadUCCData(authToken, orderIDs = [], orders = []) {
+export async function loadUCCData(authToken, orgId = '', orderIDs = [], orders = []) {
     try {
-        if (orderIDs.length <= 0) {
+        if (!orderIDs.length) {
+            return { orders };
+        }
+
+        const allowedCustomerIDs = getAllowedCustomerList(orgId);
+        if (!allowedCustomerIDs.length) {
+            printFuncError(
+                'loadUCCData',
+                `Potential issue: Allowed Customers not configured for ASN for org:${orgId}`
+            );
             return { orders };
         }
 
@@ -212,10 +222,28 @@ export async function loadUCCData(authToken, orderIDs = [], orders = []) {
             if (!res) {
                 throw `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
             }
-            orders.push(res.order);
+            const { order = {} } = res;
+
+            if (allowedCustomerIDs.includes(order.customer.id)) {
+                orders.push(order);
+            } else {
+                printFuncLog(
+                    'loadUCCData',
+                    `Customer: ${order.customer.id} does not require ASN For Org: ${orgId}`
+                );
+            }
         }
         return { orders };
     } catch (err) {
         throw err;
     }
+}
+
+// Get list of configured allowed customers, else return nothing.
+export function getAllowedCustomerList(orgId = '') {
+    const env = ENVIRONMENT_VARS.find(env => env.ID === `${orgId}`);
+    if (env && env.ALLOWED_CUSTOMERS_856 && Array.isArray(env.ALLOWED_CUSTOMERS_856)) {
+        return env.ALLOWED_CUSTOMERS_856;
+    }
+    return [];
 }
