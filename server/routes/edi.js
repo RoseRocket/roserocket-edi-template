@@ -8,9 +8,22 @@ import {
     EDI_867_ERROR_CODES,
 } from '../constants/constants';
 import { rrAuthenticate, rrAuthenticateWithSubdomain } from '../utils/rrAuthenticate.js';
-import * as util from '../utils/utils';
+import {
+    readLocalFile,
+    readLocalJsonFile,
+    printFuncError,
+    printFuncWarning,
+    printFuncLog,
+    retrieveInboundFiles,
+    generateFileNames,
+    sendAndBackupFile,
+    quickResponse,
+    localFileMove,
+    trimLeadingZeroes,
+} from '../utils/utils';
 import * as aws from '../utils/aws';
 import * as sftp from '../utils/sftp';
+import * as ftp from '../utils/ftp';
 import * as rrapi from '../api/rrApi.js';
 import * as ediOutHelpers from '../out/edi.js';
 
@@ -19,6 +32,8 @@ const {
     AWS_IN_ENDPOINT,
     SFTP_OUT_ENDPOINT,
     SFTP_IN_ENDPOINT,
+    FTP_OUT_ENDPOINT,
+    FTP_IN_ENDPOINT,
     DOWNLOAD_SUCCESS_DIR,
     DOWNLOAD_ERROR_DIR,
     FILE_IN,
@@ -180,6 +195,93 @@ export function create856FromRoseRocket(req, res, next) {
         return;
     } catch (error) {
         util.printFuncError('create856FromRoseRocket', error); // print call stack
+        return next({ error: error.toString() });
+    }
+}
+
+// create856FromRoseRocket is a function that creates an EDI 856 (ASN - Advance ship notice) file
+// which will be sent to the desired receiver.
+export function create856FromRoseRocket(req, res, next) {
+    try {
+        let orderID;
+        let error;
+        const { order = {}, order_ids = [], order_id } = req.body;
+        const ediType = '856';
+
+        var orderIDs = [];
+        orderID = order.id || order_id;
+        if ((orderID === undefined || orderID == '') && order_ids.length > 0) {
+            orderIDs = order_ids;
+        } else {
+            orderIDs[0] = orderID;
+        }
+        rrAuthenticateWithSubdomain(req.query.subdomain)
+            .then((res1 = {}) => {
+                if (!res1.access_token) {
+                    printFuncError(
+                        'create856FromRoseRocket',
+                        'Authorization Failed - Check Org credentials in environment settings.'
+                    );
+                    return;
+                }
+                ediOutHelpers
+                    .recursiveLoadUCCData(res1.access_token, orderIDs, [])
+                    .then(function(res2) {
+                        if (!res2) {
+                            error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
+                            return next({ error });
+                        }
+
+                        const { orders = [] } = res2;
+
+                        rrapi
+                            .getRequestEDITransaction(res1.access_token, orders)
+                            .then(function(res3) {
+                                if (!res3) {
+                                    error = `Unknown error when attempting to generate system EDI Transaction`;
+                                    return next({ error });
+                                }
+                                const { edi_group = {} } = res3;
+                                const orderData = ediOutHelpers.processOrderForASN(
+                                    orders,
+                                    edi_group
+                                ); // <--- RR integration webhook expects single order requests
+
+                                const data = generateEdiRequestBody(orderData.orders, {
+                                    groupControlNumber: orderData.groupControlNumber,
+                                    transactionSetHeader: ediType,
+                                    functionalGroupHeader: 'SH',
+                                    segmentTerminator: '~\n',
+                                    __vars: {
+                                        totalHL: orderData.totalHL,
+                                        totalPcs: orderData.totalPcs,
+                                    },
+                                });
+
+                                // generate 856 EDI data for that company
+                                generateEDI(ediType, data)
+                                    .then(function(res = {}) {
+                                        const { filePath = '', tmpPath = '' } = generateFileNames(
+                                            ediType,
+                                            true
+                                        );
+                                        sendAndBackupFile(res, filePath, tmpPath);
+                                    })
+                                    .catch(err => printFuncError('create856FromRoseRocket', err));
+                            })
+                            .catch(err =>
+                                printFuncError('create856FromRoseRocket - requestEDI', err)
+                            );
+                    })
+                    .catch(err =>
+                        printFuncError('create856FromRoseRocket - GetOrderWithSSCC18', err)
+                    );
+            })
+            .catch(err => printFuncError('create856FromRoseRocket - Auth', err));
+        quickResponse(res);
+        return;
+    } catch (error) {
+        printFuncError('create856FromRoseRocket', error); // print call stack
         return next({ error: error.toString() });
     }
 }
@@ -506,6 +608,11 @@ export function markFileAsProcessing(file) {
                     .then(resolve)
                     .catch(reject);
                 return;
+            case 'FTP':
+                ftp.markFileAsProcessing(localFilePath, file)
+                    .then(resolve)
+                    .catch(reject);
+                return;
             default:
                 try {
                     // to copy the markFileAsProcessing feature, after moving the file we make a copy in the
@@ -699,6 +806,12 @@ export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
                 util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
             });
             return;
+        case 'FTP':
+            ftp.fileCopy(tmpPath, FTP_OUT_ENDPOINT).catch(error => {
+                util.printFuncError('sendAndBackupFile - AFTER', error); // print call stack
+                util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+            });
+            return;
         default:
             err = util.writeStringResultToFile(content, filePath);
             break;
@@ -721,6 +834,8 @@ export function retrieveInboundFiles() {
             return aws.fileSync(AWS_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY, false);
         case 'SFTP':
             return sftp.fileSyncFromSFTP(SFTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
+        case 'FTP':
+                return ftp.fileSyncFromFTP(FTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
         default:
             return new Promise((resolve, reject) => {
                 try {
@@ -730,5 +845,126 @@ export function retrieveInboundFiles() {
                     reject(err);
                 }
             });
+        printFuncError(functionName, msg);
     }
+}
+
+// acknowledgeASN will load the associated ASN and respond with the appropriate
+export function acknowledgeASN(ediData) {
+    return new Promise((resolve, reject) => {
+        const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+
+                authToken = res1.access_token;
+                ediOutHelpers
+                    .loadEDITransaction(authToken, gcnId, res1.orgId)
+                    .then(function(res2) {
+                        const { edi_group: ediGroup = {} } = res2;
+
+                        authToken = res2.authToken;
+                        ediGroup.response_status =
+                            EDI_997_STATUS_TYPES[ediData.gcn_status.toUpperCase()];
+
+                        for (const r of ediData.responses) {
+                            ediGroup.orders
+                                .filter(
+                                    o =>
+                                        o.transaction_set_number == trimLeadingZeroes(`${r.tsn_id}`)
+                                )
+                                .forEach(function(e) {
+                                    const responseCode = r.response_code.toUpperCase();
+                                    e.response_status = EDI_997_STATUS_TYPES[responseCode];
+                                    e.message = EDI_997_STATUS_DEFAULT_MESSAGES[responseCode];
+                                });
+                        }
+                        rrapi
+                            .updateEDITransactionData(authToken, ediGroup)
+                            .then(resolve)
+                            .catch(reject);
+                    })
+                    .catch(reject);
+            })
+            .catch(reject);
+    });
+}
+
+// markASNasError will process a file that's been identified as an 867 and attempt to update Roserocket
+// with the status changes.  This includes marking the order as rejected and including the message
+// within the internal notes of the order
+export function markASNasError(ediData, file) {
+    return new Promise((resolve, reject) => {
+        const gcnId = trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+
+                authToken = res1.access_token;
+
+                //consume message data and determine which lines can be evaluated for proper execution
+                var actionableLines = [];
+                for (const mit of ediData.messages) {
+                    var startAdding = false;
+                    for (const line of mit.lines) {
+                        if (line.message.match(EDI_ERROR_ASN_START)) {
+                            startAdding = true;
+                            continue;
+                        }
+                        if (startAdding) {
+                            const ids = `${line.message.match(EDI_ERROR_ASN_MSG_PARSE)}`.split(' ');
+                            const message = line.message.replace(EDI_ERROR_ASN_MSG_PARSE, '');
+                            actionableLines.push({
+                                gcnId: trimLeadingZeroes(ids[0]),
+                                errorCode: ids[1],
+                                message,
+                            });
+                        }
+                    }
+                }
+
+                // run the update code for any actionable lines; make sure each execution can flag file
+                // as having encounterd an error
+                for (const errMessage of actionableLines) {
+                    ediOutHelpers
+                        .loadEDITransaction(authToken, errMessage.gcnId, res1.orgId)
+                        .then(function(res2) {
+                            const { edi_group: ediGroup = {} } = res2;
+
+                            authToken = res2.authToken;
+                            ediGroup.orders.forEach(function(e) {
+                                e.response_status = EDI_997_STATUS_TYPES['R'];
+                                e.message = `${
+                                    EDI_867_ERROR_CODES[errMessage.errorCode]
+                                } \nDetails:${errMessage.message} \n${file}`;
+                            });
+                            rrapi.updateEDITransactionData(authToken, ediGroup).catch(reject);
+                        })
+                        .catch(err => {
+                            markFileAsError(file, `markASNasError - loadEDITransaciton - 867`, err);
+                        });
+                }
+
+                resolve({ success: true });
+            })
+            .catch(reject);
+    });
 }

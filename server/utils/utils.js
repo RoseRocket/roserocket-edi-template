@@ -2,7 +2,8 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import moment from 'moment';
-import util from 'util';
+import * as aws from './aws.js';
+const util = require('util');
 
 const {
     LOG_DIRECTORY,
@@ -262,8 +263,6 @@ export function getInstructions(ediType, method) {
     }
 }
 
-// removing leading zeroes in case they are provided when reading EDI data, as some transaction IDs
-// were given leading 0's to maintain a min length
 export function trimLeadingZeroes(value = '') {
     return value.replace(/^0+/, '');
 }
