@@ -58,4 +58,4 @@ export const ENVIRONMENT_VARS = [
     },
 ];
 
-export const DEFAULT_ENVIRONMENT = 'e48fcf0b-4f44-441a-96ec-41b4a4b372ed';
+export const DEFAULT_ENVIRONMENT = '6d3eedd7-5cb4-4355-973d-4257152230ec';
