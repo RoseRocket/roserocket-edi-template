@@ -199,7 +199,7 @@
                                                             "name": "REF02",
                                                             "description": "BOL (FULL ID)",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.public_id"
+                                                            "path": "order.__value.ref_num"
                                                         }
                                                     ]
                                                 },
@@ -216,9 +216,9 @@
                                                         },
                                                         {
                                                             "name": "REF02",
-                                                            "description": "TMS Shipment ID (No idea)",
+                                                            "description": "TMS Shipment ID",
                                                             "type": "fromJson",
-                                                            "path": "order.__value.ref_num"
+                                                            "path": "order.__value.tms_id"
                                                         }
                                                     ]
                                                 },

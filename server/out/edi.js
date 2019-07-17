@@ -9,6 +9,8 @@ const DETAILS_THD_SKU_SEARCH = /THDSKU:[ ]*[0-9]*/g;
 const DETAILS_UPC_SEARCH = /UPC:[ ]*[0-9]*/g;
 const DETAILS_UNIT_PRICE_SEARCH = /UNITPRICE:[ ]*[0-9.]*/g;
 const DETAILS_TAG_REMOVAL = /[A-Z]*:[ ]*/g;
+const SPECIAL_INSTRUCTIONS_TMS_ID = /SHIPMENT ID#[ ]*[0-9]*/gi;
+const TMS_ID_CLEANER = /[\D]*/g;
 
 // processOrderForASN will modify the existing order data to make sure that the newly created shipment
 // object which meets the requirements laid out by HD. In order to pass validation, we needed to provide functionality
@@ -33,6 +35,8 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         asnNum: `${ediGroup.sequence_id}`,
         default_weight_unit_id: shipmentData.default_weight_unit_id.toUpperCase(),
     };
+    const tms_id = `${shipment.notes}`.match(SPECIAL_INSTRUCTIONS_TMS_ID);
+    shipment.tms_id = `${tms_id}`.replace(TMS_ID_CLEANER, '');
 
     //unnecessary fields, some light cleanup
     delete shipment.commodities;
@@ -131,6 +135,7 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         totalPcs += o.totalPcs;
         results.push(o);
     }
+
     const gcn = `${ediGroup.sequence_id}`;
     shipment.orders = results;
     return {
