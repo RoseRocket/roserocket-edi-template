@@ -11,6 +11,7 @@ const DETAILS_UNIT_PRICE_SEARCH = /UNITPRICE:[ ]*[0-9.]*/g;
 const DETAILS_TAG_REMOVAL = /[A-Z]*:[ ]*/g;
 const SPECIAL_INSTRUCTIONS_TMS_ID = /SHIPMENT ID#[ ]*[0-9]*/gi;
 const TMS_ID_CLEANER = /[\D]*/g;
+const ALPHANUMERIC_CLEANER = /\W*/g;
 
 // processOrderForASN will modify the existing order data to make sure that the newly created shipment
 // object which meets the requirements laid out by HD. In order to pass validation, we needed to provide functionality
@@ -42,6 +43,13 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
     delete shipment.commodities;
     delete shipment.accessorials;
 
+    // CLEAN Alphanumeric Fields
+    shipment.origin = fixAddress(shipment.origin);
+    shipment.destination = fixAddress(shipment.destination);
+    if (shipment.tender_num != '') {
+        shipment.destination.thd_destination_code = 'SN';
+    }
+
     // HD requirements; subsequent requests for an order musts have an alpha character, when re-transmitting
     let ediOrder = ediGroup.orders.find(g => g.order_id == shipment.id);
     if (ediOrder.attempt_number > 1) {
@@ -63,9 +71,6 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         o.totalPcs = 0;
         o.totalWeight = 0;
         o.default_weight_unit_id = o.default_weight_unit_id.toUpperCase();
-        if (order.destination.address_book_external_id != '') {
-            o.destination.thd_destination_code = 'SN';
-        }
 
         let commodities = [];
         for (const commodity of order.commodities) {
@@ -144,6 +149,18 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         totalPcs,
         groupControlNumber: gcn,
     };
+}
+// fixes non-alphanumeric characters cause they're not allowed.
+function fixAddress(address) {
+    const retAddress = { ...address };
+    retAddress.org_name = `${retAddress.org_name}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.city = `${retAddress.city}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.state = `${retAddress.state}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.postal = `${retAddress.postal}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.country = `${retAddress.country}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.address_1 = `${retAddress.address_1}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    retAddress.address_2 = `${retAddress.address_2}`.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    return retAddress;
 }
 
 /// loadEDITransaction will take an auth token and gcnId, and will get the basic information required

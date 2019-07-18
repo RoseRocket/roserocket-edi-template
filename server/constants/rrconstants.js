@@ -18,6 +18,23 @@ export const MEASUREMENT_UNIT = {
 // when attempting to create/update EDI transactions.  Webhooks require the orgID in the query string,
 // and existing EDI transactions must load the basic EDI information to get the OrgID for a transaction
 export const ENVIRONMENT_VARS = [
+    {
+        ID: 'f91499eb-1dc1-47a7-abe7-a19c6a98c44e',
+        SUBDOMAIN: 'gfnorfolk',
+        TOKEN_FILE: '/tmp/edi/token10.jwt',
+        ALLOWED_CUSTOMERS_856: [
+            '6fbb4021-2fb0-4fb9-8c8e-257f676d8804',
+            'bc0bf44a-22ab-4130-af53-842b1b714058',
+            'fakeID',
+        ],
+        CREDENTIALS: {
+            USERNAME: 'admin+gfnorfolk@roserocket.com',
+            PASSWORD: 'trailmix',
+            CLIENT_ID: '3f834e87-1b22-4f60-aa4a-fa31011f5677',
+            CLIENT_SECRET:
+                'JxUHuncgES5Mxqqfr7HCeLO2BO4bNtIaXfjvSakbJULePfx1sAXbOGK4eipINQ2KcqNqPUZwKCYh9vZq4MfJoonAba8e80Hm09Hut1OY1FMbawm2rgaToUPHI0L9ssCC',
+        },
+    },
     //************************  LOCAL DEV ENVIRONMENT VARS START *************************************
     {
         ID: 'e12ad5e7-1270-461a-8fa5-c42b620c4a3a',

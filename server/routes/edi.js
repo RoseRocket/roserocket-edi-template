@@ -692,7 +692,7 @@ export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
     // of searching, only this method was working consistently to remove this value
     const content = jsonData
         ? JSON.stringify(res.result.replace(/[\x00-\x1F\x7F-\x9F]$/g, ''))
-        : res.result.replace(/[\x00-\x1F\x7F-\x9F]$/g, '');
+        : res.result.replace(/\r/g, '');
 
     // Create temporary file at tmpPath; local copy is required for certain upload types
     let err = util.writeStringResultToFile(content, tmpPath);
