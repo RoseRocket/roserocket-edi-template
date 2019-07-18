@@ -157,7 +157,7 @@ export function create856FromRoseRocket(req, res, next) {
                                     functionalGroupHeader: 'SH',
                                     segmentTerminator: '\r\n',
                                     acknowledgmentRequested: '0',
-                                    usageIndicator: 'T',
+                                    usageIndicator: 'P',
                                     __vars: {
                                         totalHL: orderData.totalHL,
                                         totalPcs: orderData.totalPcs,
