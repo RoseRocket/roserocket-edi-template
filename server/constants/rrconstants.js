@@ -35,7 +35,7 @@ export const ENVIRONMENT_VARS = [
                 'JxUHuncgES5Mxqqfr7HCeLO2BO4bNtIaXfjvSakbJULePfx1sAXbOGK4eipINQ2KcqNqPUZwKCYh9vZq4MfJoonAba8e80Hm09Hut1OY1FMbawm2rgaToUPHI0L9ssCC',
         },
     },
-    //************************  LOCAL DEV ENVIRONMENT VARS START *************************************
+//************************  LOCAL DEV ENVIRONMENT VARS START *************************************
     {
         ID: 'e12ad5e7-1270-461a-8fa5-c42b620c4a3a',
         SUBDOMAIN: 'ttorg',
@@ -65,4 +65,5 @@ export const ENVIRONMENT_VARS = [
     //************************  LOCAL DEV ENVIRONMENT VARS END *************************************
 ];
 
-export const DEFAULT_ENVIRONMENT = 'e12ad5e7-1270-461a-8fa5-c42b620c4a3a';
+export const DEFAULT_ENVIRONMENT = 'f91499eb-1dc1-47a7-abe7-a19c6a98c44e';
+

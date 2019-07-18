@@ -1,7 +1,7 @@
 import of from 'await-of';
 import PromiseFtp from 'promise-ftp';
 import path from 'path';
-import { printFuncError, checkDirectoryStatus } from '../utils/utils';
+import { printFuncLog,printFuncError, checkDirectoryStatus } from '../utils/utils';
 
 const {
     FTP_IN_ENDPOINT,
@@ -32,7 +32,10 @@ export function fileCopy(src, dest) {
         ftp.connect(connectionConfig)
             .then(() => ftp.ascii())
             .then(() => ftp.put(src, location))
-            .then(() => ftp.end())
+		.then(res => {
+			printFuncLog("fileCopy",res);
+			ftp.end();
+                })
             .then(resolve)
             .catch(err => {
                 ftp.end();
