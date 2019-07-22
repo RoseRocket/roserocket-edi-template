@@ -9,7 +9,7 @@ const DETAILS_THD_SKU_SEARCH = /THDSKU:[ ]*[0-9]*/g;
 const DETAILS_UPC_SEARCH = /UPC:[ ]*[0-9]*/g;
 const DETAILS_UNIT_PRICE_SEARCH = /UNITPRICE:[ ]*[0-9.]*/g;
 const DETAILS_TAG_REMOVAL = /[A-Z]*:[ ]*/g;
-const SPECIAL_INSTRUCTIONS_TMS_ID = /SHIPMENT ID#[ ]*[0-9]*/gi;
+const SPECIAL_INSTRUCTIONS_TMS_ID = /SHIPMENT[ ]*ID[ ]*#[ ]*[0-9]*/gi;
 const TMS_ID_CLEANER = /[\D]*/g;
 const ALPHANUMERIC_CLEANER = /\W*/g;
 
