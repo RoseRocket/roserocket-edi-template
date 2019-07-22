@@ -460,7 +460,7 @@
                                                             "name": "PRF01",
                                                             "description": "PO ID",
                                                             "type": "fromJson",
-                                                            "path": "purchaseOrder.__value.external_id"
+                                                            "path": "purchaseOrder.__value.po_num"
                                                         },
                                                         {
                                                             "name": "PRF02",

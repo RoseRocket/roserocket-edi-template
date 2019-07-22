@@ -58,6 +58,7 @@ export function processOrderForASN(shipmentData = {}, ediGroup = {}) {
         shipment.ref_num = `${shipment.ref_num}${charCode}`;
         shipment.public_id = `${shipment.public_id}${charCode}`;
         shipment.asnNum = `${shipment.asnNum}${charCode}`;
+        shipment.tms_id = `${shipment.tms_id}${charCode}`;
     }
 
     for (const order of orders) {
