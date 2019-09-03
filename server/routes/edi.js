@@ -155,7 +155,7 @@ export function create856FromRoseRocket(req, res, next) {
                                     groupControlNumber: orderData.groupControlNumber,
                                     transactionSetHeader: ediType,
                                     functionalGroupHeader: 'SH',
-                                    segmentTerminator: '\r\n',
+                                    segmentTerminator: '~',
                                     acknowledgmentRequested: '0',
                                     usageIndicator: 'P',
                                     __vars: {
@@ -690,9 +690,10 @@ export function markASNasError(ediData, file) {
 export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
     // The following will trim the ^M special carriage return at the end of file. Did a fair amount
     // of searching, only this method was working consistently to remove this value
-    const content = jsonData
+    let content = jsonData
         ? JSON.stringify(res.result.replace(/[\x00-\x1F\x7F-\x9F]$/g, ''))
         : res.result.replace(/\r/g, '');
+   //content = content.replace(/$/g,'\n'); 
 
     // Create temporary file at tmpPath; local copy is required for certain upload types
     let err = util.writeStringResultToFile(content, tmpPath);
