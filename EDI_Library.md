@@ -19,7 +19,7 @@ This online tool can be accessed using the following information:
 
 ```
 URL: https://ediplayground.roserocket.com
-Access Token: 9cd41350-5322-474b-aeba-1aa71b7708a2      (open access,throttled)
+Access Token: 9cd41350-5322-474b-aeba-1aa71b7708a2      (open access, shared, risk of banning)
 ```
 
 ### API Endpoints
@@ -59,6 +59,10 @@ by your system.
 Every line, or **_'segment'_**, in an EDI file contains a meaningful set of **_'elements'_** that can be
 uniquely interpreted. Understanding each segment, how they relate to one another, and most importantly,
 how to make the EDI Library understand, group, and read/write these segments is the purpose of this document.
+
+<span style='color:red'>It's recommended that you start reading from the 'Reading' documentation, as
+the instruction sets tend to be less nested, and it will (hopefully) help visualize the result data
+object of which 'Creating' EDI documents is based.</span>
 
 ## Reading an existing EDI file
 The guidelines for reading an existing EDI File can be found <a href='./EDI_Library_Read.md' target="_blank">here</a>.

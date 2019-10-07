@@ -1,27 +1,29 @@
+<a href='./EDI_Library.md'><< Back</a>
+
 # Reading an existing EDI file
 As the label should indicate, the following will provide some direction when sending 'READ' instructions
 to the online EDI Library. For the generation of a new EDI file, please read the document
  <a href='./EDI_Library_Write.md' target="_blank">"Creating a new EDI File"</a>.
 
 ## Table of Contents
-<a href="#">Initial setup of instructions</a><br />
-<a href="#">Interchange Control Header</a><br />
-<a href="#">Functional Group Header</a><br />
-<a href="#">Transaction Set Header</a><br />
-<br />
-<a href="#">Reading Elements</a><br />
-<a href="#">Element Types</a><br />
-<a href="#">Element Type: toJson</a><br />
-<a href="#">Element Type: toJsonDateTime</a><br />
-<a href="#">Element Type: mapping</a><br />
-<a href="#">Element Type: ifCase</a><br />
-<a href="#">Element Type: skipElement</a><br />
-<br />
-<a href="#">Reading Segments (lines)</a><br />
-<a href="#">Segment Types</a><br />
-<a href="#">Segment Type: line</a><br />
-<a href="#">Segment Type: loopBlock</a><br />
-<a href="#">Segment Type: skipLine</a><br />
+<a href="#initial-setup-of-instructions">Initial setup of instructions</a><br />
+<a href="#interchange-control-header">Interchange Control Header</a><br />
+<a href="#functional-group-header">Functional Group Header</a><br />
+<a href="#transaction-set-header">Transaction Set Header</a><br />
+
+<a href="#reading-elements">Reading Elements</a><br />
+- <a href="#element-type-tojson">Element Type: toJson</a><br />
+- <a href="#element-type-tojsondatetime">Element Type: toJsonDateTime</a><br />
+- <a href="#element-type-mapping">Element Type: mapping</a><br />
+- <a href="#element-type-ifcase">Element Type: ifCase</a><br />
+- <a href="#element-type-skipelement">Element Type: skipElement</a><br />
+
+<a href="#reading-segments-lines-">Reading Segments (lines)</a><br />
+- <a href="#segment-type-line">Segment Type: line</a><br />
+- <a href="#segment-type-ifline">Segment Type: ifLine</a><br />
+- <a href="#segment-type-loopblock">Segment Type: loopBlock</a><br />
+- <a href="#segment-type-iblock">Segment Type: ifBlock</a><br />
+- <a href="#segment-type-skipline">Segment Type: skipLine</a><br />
 
 ## Initial setup of instructions
 While this _should_ be standard for all incoming files, our online EDI Library has been opened up to
@@ -49,7 +51,7 @@ with resulting ediHeader data.
 ```
 ISA*00*   *00*   *ZZ*RR   *ZZ*TT    *181222*1940*U*00401*000000014*0*T*>
 
-{
+"ediHeader": {
     "authorizationQualifier": "00",
     "authorizationInformation": "",
     "securityQualifier": "00",
@@ -73,15 +75,21 @@ to be read. Prior to outputting the data, you'll find the _groupHeader_ attribut
 ```
 GS*SM*RR*TT*20181222*1940*0001*X*004010
 
-{
-    "functionalIdentifier": "SM",
-    "interchangeSenderId": "RR",
-    "interchangeReceiverId": "TT",
-    "transmissionDate": "2018-12-22T19:40:00.000Z",
-    "groupControlNumber": "0001",
-    "responsibleAgency": "X",
-    "ediVersion": "004010"
-}
+"groups": [
+    {   // 1st group
+        "groupHeader":{
+            "functionalIdentifier": "SM",
+            "interchangeSenderId": "RR",
+            "interchangeReceiverId": "TT",
+            "transmissionDate": "2018-12-22T19:40:00.000Z",
+            "groupControlNumber": "0001",
+            "responsibleAgency": "X",
+            "ediVersion": "004010"
+        },
+        "orders": [ORDERS_RESULT_DATA... (See Below)]
+    },
+    [...]
+]
 ```
 
 ## Transaction Set Header
@@ -90,15 +98,23 @@ outputting the data, you'll find another embedded _groupHeader_ attribute. Examp
 ```
 ST*204*0001
 
-{
-    "transactionSetId": "204",
-    "transactionSetControlNumber": "0001"
-}
+"orders":[
+    {   //1st order
+        "groupHeader": {
+            "transactionSetId": "204",
+            "transactionSetControlNumber": "0001"
+        },
+        [ORDER_DATA...],
+    },
+    [...]
+]
 ```
 
+<br />
+
 ## Reading Elements
-Elements are the building blocks of segments, and in order for the 'Reading Segments' section to make
-sense, we'll first be looking at the elements that compose them.
+Elements are the building blocks of segments (lines), and in order for the <a href="#reading-segments-lines-">'Reading Segments'</a> section
+to make sense, we'll first be looking at the elements that compose them.
 
 If you're familar with an EDI document, or have one handy, you'll know/see that every segment element
 has a unique label. In the following example:
@@ -144,8 +160,14 @@ In our instructions, we'll be structuring our JSON object to be quite similar.
 
 In this example, each element is a straight-forward value => field mapping. **"name/description"** values
 are notes/memos to make the instructions more human-readable. _While these are optional_, it is advisable
-to keep them. **"type"** will tell the library how to interpret the data, while **"path"** will determine
-the return value label. Visually, the JSON data returned for this segment will be as follows:
+to keep them.
+
+The **"type"** will tell the library how to interpret the data, and we go into much more detail
+below as the type also impacts additional 'required' fields.
+
+The **"path"** will determine the return value label.
+
+Visually, the JSON data returned for this segment will be as follows:
 ```
 "orders": [
     ...
@@ -157,9 +179,14 @@ the return value label. Visually, the JSON data returned for this segment will b
     ...
 ]
 ```
-This data is now available for you to consume in your system. It is also useful to note that **path** is
-an attribute path, so extended attributes are possible as well. For example, if we were to change
-"B1003" above to:
+This data is now available for you to consume in your system.
+
+#### The 'PATH' variable
+It is also useful to note that **path** variable is an attribute path, meaning that it can be extended
+such that nested return values are possible as well. The hope is that this will allow you to configure
+the return data to match your personal needs as you see fit.
+
+For example, if we were to change "B1003" above to:
 
 ```
 {
@@ -169,7 +196,7 @@ an attribute path, so extended attributes are possible as well. For example, if 
     "path": "values.scac"  <====== NOTE THE 'values.'
 }
 ```
-It will result in the following data structure return
+It will result in the following data structure return:
 ```
 "orders": [
     ...
@@ -188,8 +215,8 @@ It will result in the following data structure return
 ### Element Types
 There are 5 types by which to define a data element: <br />
 <a href="#element-type-tojson" >toJson</a> <br />
-<a href="#element-type-toJsonDateTime" >toJsonDateTime</a> <br />
 <a href="#element-type-mapping" >mapping</a> <br />
+<a href="#element-type-toJsonDateTime" >toJsonDateTime</a> <br />
 <a href="#element-type-ifCase" >ifCase</a> <br />
 <a href="#element-type-skipElement" >skipElement</a>
 
@@ -198,9 +225,14 @@ This element type has already been described above as a straight-forward value =
 **"name/description"** values are notes/memos to make the instructions more human-readable.
 _While these are optional_, it is advisable to keep them.
 
-#### Element Type: toJsonDateTime
-
 #### Element Type: mapping
+This 'mapping' type is likely the most complicated as it is used for segments whose labels are 
+_context specific_, meaning that the label is dependent on the values within it. If you've been following
+along with 
+
+#### Element Type: toJsonDateTime
+This element is a value => filed mapping, but a 'dateTimeFormat' (required) field is also necessary.
+
 
 #### Element Type: ifCase
 
@@ -208,8 +240,10 @@ _While these are optional_, it is advisable to keep them.
 For simplicity's sake, this is an element that can be ignored and will not generate a return field.
 
 
+<br />
+
 ## Reading Segments (lines)
-Segments are our first look at configurable lines. Based on the order that they are received,
+Segments are our next look at configuration. Based on the order that they are received,
 segments can be grouped together to signify a set of data. It's important to identify these
 different configurations such that the data is returned properly.
 
@@ -223,9 +257,14 @@ can be configured in the instructions as follows:
 ```
 
 ### Segment Types
-A segment can fall under 3 'line types':
+A segment can fall under 5 'line types':<br />
+<a href="#segment-type-line" >Line</a> <br />
+<a href="#segment-type-ifline" >ifLine</a> <br />
+<a href="#segment-type-loopblock" >loopBlock</a> <br />
+<a href="#segment-type-ifblock" >ifBlock</a> <br />
+<a href="#segment-type-skipline" >skipLine</a>
 
-#### Segment Type 'line'
+#### Segment Type: line
 A 'line' segment implies that it is a full set of data, and has no relation to other segments.
 Building on our **AT7** example from before, this can be configured as follows:
 ```
@@ -235,9 +274,9 @@ Building on our **AT7** example from before, this can be configured as follows:
 }
 ```
 
-<br />
+#### Segment Type: ifLine
 
-#### Segment Type 'loopBlock'
+#### Segment Type: loopBlock
 A 'loopBlock' segment implies that this segment and a set list of following segments are meant to be
 grouped together. For example, common groupings include stop details that have stop names, addresses,
 and contact information.
@@ -251,9 +290,9 @@ line-by-line, in order to explain how the data is divied out.
 }
 ```
 
-<br />
+#### Segment Type: ifBlock
 
-#### Segment Type 'skipLine'
+#### Segment Type: skipLine
 A 'skipLine' segment implies that this information is not essential to your data processing. Certain
 segments in EDI files are more confirmation than informative; you already have the corresponding data.
 In these instances, if you'd prefer to clean up the return data and not deal with certain segments,

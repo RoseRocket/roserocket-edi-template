@@ -1,0 +1,248 @@
+{
+	"info": {
+		"_postman_id": "ab82f98d-a905-48b0-8631-533c6003e465",
+		"name": "RR EDI API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "APPS",
+			"item": [
+				{
+					"name": "Test Generate 204 EDI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"order.dispatched\",\n    \"order\": {\n        \"id\": \"f0ed442a-f7b9-4559-ac5a-b79444e7ffd5\",\n        \"weight_unit_id\": \"kg\",\n        \"created_by\": \"6fd1d5bf-59fa-4b54-9487-770e33e93121\",\n        \"customer\": {\n            \"id\": \"3ab1199e-23d5-45eb-b806-d6fc8225df0d\",\n            \"short_code\": \"ABC\"\n        },\n        \"sequence_id\": 14,\n        \"public_id\": \"CAR1-TIM-14\",\n        \"origin\": {\n            \"address_book_id\": null,\n            \"org_name\": \"Tim Hortons\",\n            \"contact_name\": \"\",\n            \"address_1\": \"10 Dundas St.\",\n            \"address_2\": \"Suite 600\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5B2G9\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"destination\": {\n            \"address_book_id\": \"cec36792-c1d4-4b56-b340-a9485434d770\",\n            \"org_name\": \"LOCAL Public Eatery\",\n            \"contact_name\": \"\",\n            \"address_1\": \"171 East Liberty Street\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M6K 3P6\",\n            \"phone\": \"(416) 901-8351\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"billing\": {\n            \"address_book_id\": null,\n            \"org_name\": \"Tim Hortons\",\n            \"contact_name\": \"\",\n            \"address_1\": \"10 Dundas St.\",\n            \"address_2\": \"Suite 600\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5B2G9\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"status\": \"quoted\",\n        \"billing_option\": \"prepaid\",\n        \"notes\": \"Please be careful! Fragile stuff!\",\n        \"po_num\": \"PO-123\",\n        \"tender_num\": \"\",\n        \"ref_num\": \"\",\n        \"custom_broker\": \"\",\n        \"pickup_end_at\": \"2017-05-29T19:30:41.102Z\",\n        \"pickup_start_at\": \"2017-05-29T19:30:41.1Z\",\n        \"pickup_appt_start_at\": null,\n        \"pickup_appt_end_at\": null,\n        \"delivery_end_at\": null,\n        \"delivery_start_at\": \"2017-05-29T15:26:41.902-04:00\",\n        \"delivery_appt_start_at\": null,\n        \"delivery_appt_end_at\": null,\n        \"dim_type\": \"ltl\",\n        \"commodities\": [\n            {\n                \"measurement_unit\": \"inch\",\n                \"weight_unit\": \"lb\",\n                \"freight_class\": \"none\",\n                \"commodity_type\": \"skid\",\n                \"commodity_type_other\": \"\",\n                \"description\": \"Things\",\n                \"feet\": 0,\n                \"length\": 4,\n                \"width\": 4,\n                \"height\": 4,\n                \"weight\": 40,\n                \"nmfc\": \"\",\n                \"is_stackable\": false,\n                \"quantity\": 4,\n                \"pieces\": 4\n            },\n            {\n                \"measurement_unit\": \"inch\",\n                \"weight_unit\": \"lb\",\n                \"freight_class\": \"none\",\n                \"commodity_type\": \"skid\",\n                \"commodity_type_other\": \"\",\n                \"description\": \"Things\",\n                \"feet\": 0,\n                \"length\": 5,\n                \"width\": 5,\n                \"height\": 5,\n                \"weight\": 50,\n                \"nmfc\": \"\",\n                \"is_stackable\": false,\n                \"quantity\": 5,\n                \"pieces\": 5\n            }\n        ],\n        \"accessorials\": [\"app-delivery\", \"pickup-tailgate\"]\n    }\n}\n"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/edi/generateByPost/204?test=true&edi-api-token={{edi-api-token}}&secret={{secret-APPS}}&org_id={{org_id-APPS}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"edi",
+								"generateByPost",
+								"204"
+							],
+							"query": [
+								{
+									"key": "test",
+									"value": "true"
+								},
+								{
+									"key": "edi-api-token",
+									"value": "{{edi-api-token}}"
+								},
+								{
+									"key": "secret",
+									"value": "{{secret-APPS}}"
+								},
+								{
+									"key": "org_id",
+									"value": "{{org_id-APPS}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "204 EDI VIA WEBHOOK",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"order.dispatched\",\n    \"order_id\":\"470edf73-671b-4aa4-b743-013b68098ee7\"\n    \n}\n"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/webhooks/order/dispatched?token={{edi-api-token}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"webhooks",
+								"order",
+								"dispatched"
+							],
+							"query": [
+								{
+									"key": "secret",
+									"value": "{{secret-APPS}}",
+									"disabled": true
+								},
+								{
+									"key": "org_id",
+									"value": "{{org_id-APPS}}",
+									"disabled": true
+								},
+								{
+									"key": "token",
+									"value": "{{edi-api-token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ANCarrier",
+			"item": [
+				{
+					"name": "Generate 204 EDI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"order.dispatched\",\n    \"order\": {\n        \"id\": \"0e12847f-8c22-473a-8f37-6ae123ed790a\",\n        \"org_id\": \"b37b8089-46d3-42e6-9c4a-d6eee57e01f5\",\n        \"sequence_id\": 41,\n        \"external_id\": \"\",\n        \"public_id\": \"ANC-KSR-41\",\n        \"customer\": {\n            \"id\": \"93801dcb-9684-4f3d-8acf-fe122e23e782\",\n            \"external_id\": \"\",\n            \"short_code\": \"KSR\"\n        },\n        \"origin\": {\n            \"address_book_id\": null,\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Road2\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"destination\": {\n            \"address_book_id\": \"9e23bbf7-6162-4e5d-96ab-27ba3b25c9d3\",\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Roadq\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": \"2017-02-28T11:00:00Z\",\n            \"bus_hours_end_at\": \"2017-02-28T15:00:00Z\"\n        },\n        \"billing\": {\n            \"address_book_id\": null,\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Road2\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"status\": \"dispatched\",\n        \"billing_option\": \"prepaid\",\n        \"notes\": \"\",\n        \"po_num\": \"\",\n        \"tender_num\": \"\",\n        \"ref_num\": \"\",\n        \"custom_broker\": \"\",\n        \"declared_value\": 0,\n        \"declared_value_currency\": \"usd\",\n        \"pickup_start_at\": \"2017-06-06T18:30:36.707Z\",\n        \"pickup_end_at\": \"2017-06-06T18:30:36.707Z\",\n        \"pickup_appt_start_at\": null,\n        \"pickup_appt_end_at\": null,\n        \"delivery_start_at\": null,\n        \"delivery_end_at\": null,\n        \"delivery_appt_start_at\": \"2017-02-28T16:00:58.328Z\",\n        \"delivery_appt_end_at\": \"2017-02-28T16:00:58.328Z\",\n        \"dim_type\": \"ltl\",\n        \"commodities\": [],\n        \"accessorials\": []\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/edi/generate/204?test=true&edi-api-token={{edi-api-token}}&secret={{secret-ANCarrier}}&org_id={{org_id-ANCarrier}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"edi",
+								"generate",
+								"204"
+							],
+							"query": [
+								{
+									"key": "test",
+									"value": "true"
+								},
+								{
+									"key": "edi-api-token",
+									"value": "{{edi-api-token}}"
+								},
+								{
+									"key": "secret",
+									"value": "{{secret-ANCarrier}}"
+								},
+								{
+									"key": "org_id",
+									"value": "{{org_id-ANCarrier}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate 1009 TEST EDI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"order.dispatched\",\n    \"order\": {\n        \"id\": \"0e12847f-8c22-473a-8f37-6ae123ed790a\",\n        \"org_id\": \"b37b8089-46d3-42e6-9c4a-d6eee57e01f5\",\n        \"sequence_id\": 41,\n        \"external_id\": \"\",\n        \"public_id\": \"ANC-KSR-41\",\n        \"customer\": {\n            \"id\": \"93801dcb-9684-4f3d-8acf-fe122e23e782\",\n            \"external_id\": \"\",\n            \"short_code\": \"KSR\"\n        },\n        \"origin\": {\n            \"address_book_id\": null,\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Road2\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"destination\": {\n            \"address_book_id\": \"9e23bbf7-6162-4e5d-96ab-27ba3b25c9d3\",\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Roadq\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": \"2017-02-28T11:00:00Z\",\n            \"bus_hours_end_at\": \"2017-02-28T15:00:00Z\"\n        },\n        \"billing\": {\n            \"address_book_id\": null,\n            \"address_book_external_id\": null,\n            \"org_name\": \"Khao San Road2\",\n            \"contact_name\": \"\",\n            \"address_1\": \"785 Queen St W\",\n            \"address_2\": \"\",\n            \"suite\": \"\",\n            \"city\": \"Toronto\",\n            \"state\": \"ON\",\n            \"country\": \"CA\",\n            \"postal\": \"M5V 1P7\",\n            \"phone\": \"\",\n            \"phone_ext\": \"\",\n            \"email\": \"\",\n            \"fax\": \"\",\n            \"latitude\": null,\n            \"longitude\": null,\n            \"bus_hours_start_at\": null,\n            \"bus_hours_end_at\": null\n        },\n        \"status\": \"dispatched\",\n        \"billing_option\": \"prepaid\",\n        \"notes\": \"\",\n        \"po_num\": \"\",\n        \"tender_num\": \"\",\n        \"ref_num\": \"\",\n        \"custom_broker\": \"\",\n        \"declared_value\": 0,\n        \"declared_value_currency\": \"usd\",\n        \"pickup_start_at\": \"2017-06-06T18:30:36.707Z\",\n        \"pickup_end_at\": \"2017-06-06T18:30:36.707Z\",\n        \"pickup_appt_start_at\": null,\n        \"pickup_appt_end_at\": null,\n        \"delivery_start_at\": null,\n        \"delivery_end_at\": null,\n        \"delivery_appt_start_at\": \"2017-02-28T16:00:58.328Z\",\n        \"delivery_appt_end_at\": \"2017-02-28T16:00:58.328Z\",\n        \"dim_type\": \"ltl\",\n        \"commodities\": [],\n        \"accessorials\": []\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/edi/generate/204?test=true&edi-api-token={{edi-api-token}}&secret={{secret-ANCarrier}}&org_id={{org_id-ANCarrier}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"edi",
+								"generate",
+								"204"
+							],
+							"query": [
+								{
+									"key": "test",
+									"value": "true"
+								},
+								{
+									"key": "edi-api-token",
+									"value": "{{edi-api-token}}"
+								},
+								{
+									"key": "secret",
+									"value": "{{secret-ANCarrier}}"
+								},
+								{
+									"key": "org_id",
+									"value": "{{org_id-ANCarrier}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "GreenFiber",
+			"item": [
+				{
+					"name": "856 EDI VIA WEBHOOK",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"event\": \"order.in_transit\",\n    \"order_id\": \"60218014-bddc-453e-9c6a-76943ff62d1b\",\n    \"order_ids\":[\"60218014-bddc-453e-9c6a-76943ff62d1b\",\"d223f69e-d021-4070-a6ae-9b502671ff8e\"]\n}\n"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/webhooks/order/in_transit?token={{edi-api-token}}&subdomain=ttorg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"webhooks",
+								"order",
+								"in_transit"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{edi-api-token}}"
+								},
+								{
+									"key": "subdomain",
+									"value": "ttorg"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

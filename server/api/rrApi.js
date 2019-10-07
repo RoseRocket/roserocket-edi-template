@@ -1,12 +1,20 @@
 import { baseRequest } from './baseRequest.js';
 import { format } from 'util';
 import moment from 'moment';
+import { printFuncLog } from '../utils/utils';
 
 const {
     BASE_API_URL,
     ISA_COMPANY_NAME,
     ISA_INTERCHANGE_SENDER_ID,
     ISA_INTERCHANGE_RECEIVER_ID,
+    ISA_VERSION_NUMBER,
+    APP_INTERCHANGE_SENDER_ID,
+    APP_INTERCHANGE_RECEIVER_ID,
+    APP_VERSION_NUMBER,
+    ISA_RECEIVER_QUALIFIER,
+    ISA_SENDER_QUALIFIER,
+    ISA_REPETITION_SEPARATOR,
 } = process.env;
 
 export const config = {
@@ -20,6 +28,9 @@ export const config = {
         customerOrderRevise: '/api/v1/customers/%s/orders/%s/revise',
         customerOrderMarkInTransit: '/api/v1/customers/%s/orders/%s/mark_in_transit',
         customerOrderMarkDelivered: '/api/v1/customers/%s/orders/%s/mark_delivered',
+        ediBase: '/api/v2/edi/%s',
+        ediCreate: '/api/v2/edi/request',
+        ediGetBySequence: '/api/v2/edi/load_sequence?sequence_id=%s',
     },
 };
 
@@ -34,6 +45,86 @@ export function getOrder(token, orderId) {
             Authorization: `${config.tokenType} ${token}`,
         },
         url: `${BASE_API_URL}${format(config.urls.orders)}/${orderId}`,
+    });
+}
+
+// getOrderWithSSCC18 will communicate with the RoseRocket System to retrieve Order details by way of the
+// orderID provided in the Webhook Request, and include the expected SSCC-18 labels
+export function getOrderWithSSCC18(token, orderId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.orders)}/${orderId}?additional_info=edi`,
+    });
+}
+
+// getRequestEDITransaction will communicate with the RoseRocket System to retrieve a new set of
+// EDI Transaction Data
+export function getRequestEDITransaction(token, orders = []) {
+    let ordersData = orders.map(order => ({
+        order_id: order.id,
+        transaction_set_number: 1,
+    }));
+
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${config.urls.ediCreate}`,
+        data: { orders: ordersData },
+        method: 'post',
+    });
+}
+
+// getEDIBaseInformationByRequestID will communicate with the RoseRocket System to retrieve the Base
+// information required to load an EDI transaction by
+export function getEDIBaseInformationByRequestID(token, sequenceId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediGetBySequence, sequenceId)}`,
+    });
+}
+
+// loadEDITransactionData will communicate with the RoseRocket System to retrieve an existing set of
+// EDI Transaction information, base on the data received from getEDIBaseInformationByRequestID
+export function loadEDITransactionData(token, gcnId) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediBase, gcnId)}`,
+    });
+}
+
+// updateEDITransactionData will communicate with the RoseRocket System update the information
+// for a given EDI transaction. Depending on the nature of the update, this may also include order
+// notifications for rejected orders
+export function updateEDITransactionData(token, ediGroup) {
+    return baseRequest({
+        timeout: config.timeout,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: `${config.tokenType} ${token}`,
+        },
+        url: `${BASE_API_URL}${format(config.urls.ediBase, ediGroup.id)}`,
+        data: ediGroup,
+        method: 'put',
     });
 }
 
@@ -97,21 +188,43 @@ export function markDelivered(token, customerId, orderId, data = {}) {
 // library, as the request body from RoseRocket Webhooks will be missing items expected by our
 // 'instructions', particularly those dealing with the ISA Interchange Control Header.
 // Our default EDI Instructions also includes the deadline for response, set below as 'respondBy'
-export function generateEdiRequestBody(orders) {
+export function generateEdiRequestBody(orders, options = {}) {
     // Must responde by 12 hours from now
     const respondBy = moment()
         .add(12, 'hours')
         .toISOString();
+    const currentTime = moment().toISOString();
+    const gcn = options.groupControlNumber || '1';
+    const edi = {
+        companyName: ISA_COMPANY_NAME,
+        appSenderId: APP_INTERCHANGE_SENDER_ID,
+        appReceiverId: APP_INTERCHANGE_RECEIVER_ID,
+        interchangeSenderId: ISA_INTERCHANGE_SENDER_ID,
+        interchangeReceiverId: ISA_INTERCHANGE_RECEIVER_ID,
+        interchangeReceiverQualifierId: ISA_RECEIVER_QUALIFIER,
+        interchangeSenderQualifierId: ISA_SENDER_QUALIFIER,
+        interchangeRepetitionSeparator: ISA_REPETITION_SEPARATOR,
+        interchangeVersionNumber: ISA_VERSION_NUMBER,
+        ediVersion: APP_VERSION_NUMBER,
+        groupControlNumber: gcn,
+        interchangeControlNumber: gcn.padStart(9, '0'),
+    };
+
+    if (options.verbose) {
+        printFuncLog('generateEdiRequestBody', edi);
+        delete options.verbose;
+    }
+
     return {
         __edi: {
-            companyName: ISA_COMPANY_NAME,
-            interchangeSenderId: ISA_INTERCHANGE_SENDER_ID,
-            interchangeReceiverId: ISA_INTERCHANGE_RECEIVER_ID,
+            ...edi,
+            ...options,
         },
         __vars: {
-            groupControlNumber: '0001',
+            ...options.__vars,
             respondBy,
+            currentTime,
         },
-        orders: orders,
+        orders: orders.shipments,
     };
 }
