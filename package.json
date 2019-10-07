@@ -30,7 +30,7 @@
         "@babel/core": "7.4.3",
         "await-of": "1.2.0",
         "body-parser": "1.11.0",
-        "bootstrap": "3.3.7",
+        "bootstrap": "3.4.1",
         "chalk": "2.3.0",
         "console-stamp": "0.2.0",
         "dotenv": "4.0.0",
