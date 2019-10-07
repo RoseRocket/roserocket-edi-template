@@ -3,11 +3,9 @@ import mkdirp from 'mkdirp';
 import chalk from 'chalk';
 import moment from 'moment';
 import * as aws from './aws.js';
+const util = require('util');
 
 const {
-    LOCAL_SYNC_DIRECTORY,
-    AWS_OUT_ENDPOINT,
-    AWS_IN_ENDPOINT,
     LOG_DIRECTORY,
     PROJECT_ROOT_DIRECTORY,
     FILE_IN,
@@ -19,13 +17,9 @@ const {
     TMP_OUT_DIR,
     EDI_FILE_NAMING_TEMPLATE,
     DATA_FILE_NAMING_TEMPLATE,
-    GENERATED_EDI_UPLOAD_MODE,
-    SOURCE_EDI_DOWNLOAD_MODE,
 } = process.env;
 
 const HTTP_OK = 200;
-const uploadAction = `${GENERATED_EDI_UPLOAD_MODE}`.toUpperCase();
-const downloadAction = `${SOURCE_EDI_DOWNLOAD_MODE}`.toUpperCase();
 
 // printFuncError will output a red, error message to both the console, and a matching message
 // to the error logs in the log directory
@@ -53,7 +47,7 @@ export function printFuncLog(functionName, obj) {
         checkDirectoryStatus(LOG_DIRECTORY);
         const msg = `[LOGGER] [${moment(new Date()).format(
             'YYYY-MM-DD HH:mm:ss'
-        )}] [${functionName}]: ${obj}`;
+        )}] [${functionName}]: ${util.inspect(obj, false, null, true)}`;
         const logFile = fs.createWriteStream(
             `${LOG_DIRECTORY}/${moment(new Date()).format('YYYYMMDD')}.info`,
             { flags: 'a' }
@@ -174,57 +168,7 @@ export function syncLocalFilesToBeProcessed(srcDir, destDir) {
     }
 }
 
-// sendAndBackupFile will determine what to to do with the result from the EDI Playground.
-export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
-    const content = jsonData ? JSON.stringify(res.result) : res.result;
-
-    // Create temporary file at tmpPath; local copy is required for certain upload types
-    let err = writeStringResultToFile(content, tmpPath);
-    if (err) {
-        printFuncError('processOutboundLocalFile', err.toString()); // print call stack
-        localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
-        return err;
-    }
-
-    switch (uploadAction) {
-        case 'AWS':
-            aws.fileCopy(tmpPath, AWS_OUT_ENDPOINT).catch(error => {
-                err = error;
-            });
-            break;
-        default:
-            err = writeStringResultToFile(content, filePath);
-            break;
-    }
-
-    // If upload action fails, log error, backup file, and return err
-    if (err) {
-        printFuncError('processOutboundLocalFile', err.toString()); // print call stack
-        localFileBackup(UPLOAD_ERROR_DIR, { isError: true, pr: 'upload_error_' });
-        return err;
-    }
-    return;
-}
-
-// retrieveInboundFiles will get new EDI files from the configured source to the local sync directory,
-// even if they're local data files.
-export function retrieveInboundFiles() {
-    switch (downloadAction) {
-        case 'AWS':
-            return aws.fileSync(AWS_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY, false);
-        default:
-            return new Promise((resolve, reject) => {
-                try {
-                    syncLocalFilesToBeProcessed(FILE_IN, LOCAL_SYNC_DIRECTORY);
-                    resolve();
-                } catch (err) {
-                    reject(err);
-                }
-            });
-    }
-}
-
-// simple function that will ensure that the requested folder exists
+// simple function that will ensure that the requested folder exists, even if it has to create it
 export function checkDirectoryStatus(folder) {
     // setup a necessarily open directory if configuration isn't setup properly
     const defaultDirectory = '/tmp/edi-config-failure';
@@ -264,6 +208,7 @@ export function generateFileNames(ediType, ediFile = false) {
     };
 }
 
+// quick function to synchronously write to file.
 export function writeStringResultToFile(result, path) {
     fs.writeFileSync(path, result, error => {
         if (error) {
@@ -272,6 +217,7 @@ export function writeStringResultToFile(result, path) {
     });
 }
 
+// quick function to synchronously write a JSON Object to file.
 export function writeJSONResultToFile(result, path) {
     fs.writeFileSync(path, JSON.stringify(result), error => {
         if (error) {
@@ -315,4 +261,8 @@ export function getInstructions(ediType, method) {
     } catch (error) {
         return { error };
     }
+}
+
+export function trimLeadingZeroes(value = '') {
+    return value.replace(/^0+/, '');
 }

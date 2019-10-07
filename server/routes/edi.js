@@ -1,34 +1,43 @@
 import fs from 'fs';
 import { generateEDI, parseEDI } from '../api/ediGambitApi';
 import { generateEdiRequestBody } from '../api/rrApi';
-import { EDI_TYPES } from '../constants/constants';
-import { rrAuthenticate } from '../utils/rrAuthenticate.js';
 import {
-    readLocalFile,
-    readLocalJsonFile,
-    printFuncError,
-    printFuncWarning,
-    retrieveInboundFiles,
-    generateFileNames,
-    sendAndBackupFile,
-    quickResponse,
-    localFileMove,
-} from '../utils/utils';
+    EDI_TYPES,
+    EDI_997_STATUS_TYPES,
+    EDI_997_STATUS_DEFAULT_MESSAGES,
+    EDI_867_ERROR_CODES,
+} from '../constants/constants';
+import { rrAuthenticate, rrAuthenticateWithSubdomain } from '../utils/rrAuthenticate.js';
+import * as util from '../utils/utils';
 import * as aws from '../utils/aws';
+import * as sftp from '../utils/sftp';
+import * as ftp from '../utils/ftp';
 import * as rrapi from '../api/rrApi.js';
+import * as ediOutHelpers from '../out/edi.js';
 
 const {
-    ORG_NAME,
-    LOCAL_SYNC_DIRECTORY,
-    FILE_IN,
-    SOURCE_EDI_DOWNLOAD_MODE,
+    AWS_OUT_ENDPOINT,
+    AWS_IN_ENDPOINT,
+    SFTP_OUT_ENDPOINT,
+    SFTP_IN_ENDPOINT,
+    FTP_OUT_ENDPOINT,
+    FTP_IN_ENDPOINT,
     DOWNLOAD_SUCCESS_DIR,
     DOWNLOAD_ERROR_DIR,
+    FILE_IN,
+    GENERATED_EDI_UPLOAD_MODE,
+    LOCAL_SYNC_DIRECTORY,
+    SOURCE_EDI_DOWNLOAD_MODE,
+    ORG_NAME,
 } = process.env;
 
+const uploadAction = `${GENERATED_EDI_UPLOAD_MODE}`.toUpperCase();
 const downloadAction = `${SOURCE_EDI_DOWNLOAD_MODE}`.toUpperCase();
 const SUPPORTED_ORDER_STATUSES = { in_transit: 'AF', delivered: 'X1' };
 const PROCESS_DELAY = 1000;
+const EDI_TYPE_SEARCH = /\nST\*[0-9]{2,3}\*/g;
+const EDI_ERROR_ASN_START = /[- ]{5,}/g;
+const EDI_ERROR_ASN_MSG_PARSE = /^[0-9]* (IB|J)[0-9]* /g;
 
 // create204FromRoseRocket is a function called from the only webhook that's currently configured
 // in the server.js file. As the name would imply, it creates a 204 EDI file from the records that
@@ -45,7 +54,7 @@ export function create204FromRoseRocket(req, res, next) {
         rrAuthenticate()
             .then((res1 = {}) => {
                 if (!res1.access_token) {
-                    printFuncError(
+                    util.printFuncError(
                         'create204FromFormOrderID',
                         'Authorization Failed - Check Org credentials in environment settings.'
                     );
@@ -64,21 +73,123 @@ export function create204FromRoseRocket(req, res, next) {
                         // generate 204 EDI data for that company
                         generateEDI(ediType, data)
                             .then(function(res = {}) {
-                                const { filePath = '', tmpPath = '' } = generateFileNames(
+                                const { filePath = '', tmpPath = '' } = util.generateFileNames(
                                     ediType,
                                     true
                                 );
                                 sendAndBackupFile(res, filePath, tmpPath);
                             })
-                            .catch(err => printFuncError('create204FromRoseRocket', err));
+                            .catch(err => util.printFuncError('create204FromRoseRocket', err));
                     })
-                    .catch(err => printFuncError('create204FromRoseRocket', err));
+                    .catch(err => util.printFuncError('create204FromRoseRocket', err));
             })
-            .catch(err => printFuncError('create204FromRoseRocket', err));
-        quickResponse(res);
+            .catch(err => util.printFuncError('create204FromRoseRocket', err));
+        util.quickResponse(res);
         return;
     } catch (error) {
-        printFuncError('create204FromRoseRocket', error); // print call stack
+        util.printFuncError('create204FromRoseRocket', error); // print call stack
+        return next({ error: error.toString() });
+    }
+}
+
+// create856FromRoseRocket is a function that creates an EDI 856 (ASN - Advance ship notice) file
+// which will be sent to the desired receiver.
+export function create856FromRoseRocket(req, res, next) {
+    try {
+        let orderID;
+        let error;
+        const { order = {}, order_ids = [], order_id } = req.body;
+        const ediType = '856';
+
+        let orderIDs = [];
+        orderID = order.id || order_id;
+        if ((orderID === undefined || orderID == '') && order_ids.length > 0) {
+            orderIDs = order_ids;
+        } else {
+            orderIDs[0] = orderID;
+        }
+        rrAuthenticateWithSubdomain(req.query.subdomain)
+            .then((res1 = {}) => {
+                if (!res1.access_token) {
+                    util.printFuncError(
+                        'create856FromRoseRocket',
+                        'Authorization Failed - Check Org credentials in environment settings.'
+                    );
+                    return;
+                }
+                ediOutHelpers
+                    .loadUCCData(res1.access_token, res1.orgId, orderIDs, [])
+                    .then(function(res2) {
+                        if (!res2) {
+                            error = `Order with ID ${orderID} could not be found for this Org (${ORG_NAME})`;
+                            return { error };
+                        }
+
+                        const { orders = [] } = res2;
+
+                        if (!orders.length) {
+                            return {
+                                success: true,
+                                message: 'ASN not required.',
+                            };
+                        }
+
+                        rrapi
+                            .getRequestEDITransaction(res1.access_token, orders)
+                            .then(function(res3) {
+                                if (!res3) {
+                                    error = `Unknown error when attempting to generate system EDI Transaction`;
+                                    return next({ error });
+                                }
+                                const { edi_group = {} } = res3;
+                                let shipment = {
+                                    ...orders[0],
+                                    orders,
+                                };
+                                const orderData = ediOutHelpers.processOrderForASN(
+                                    shipment,
+                                    edi_group
+                                ); // <--- RR integration webhook expects single order requests
+
+                                const data = generateEdiRequestBody(orderData, {
+                                    groupControlNumber: orderData.groupControlNumber,
+                                    transactionSetHeader: ediType,
+                                    functionalGroupHeader: 'SH',
+                                    segmentTerminator: '~',
+                                    acknowledgmentRequested: '0',
+                                    usageIndicator: 'P',
+                                    __vars: {
+                                        totalHL: orderData.totalHL,
+                                        totalPcs: orderData.totalPcs,
+                                    },
+                                });
+
+                                // generate 856 EDI data for that company
+                                generateEDI(ediType, data)
+                                    .then(function(res = {}) {
+                                        const {
+                                            filePath = '',
+                                            tmpPath = '',
+                                        } = util.generateFileNames(ediType, true);
+                                        sendAndBackupFile(res, filePath, tmpPath);
+                                    })
+                                    .catch(err =>
+                                        util.printFuncError('create856FromRoseRocket', err)
+                                    );
+                            })
+                            .catch(err =>
+                                util.printFuncError('create856FromRoseRocket - requestEDI', err)
+                            );
+                    })
+                    .catch(err =>
+                        util.printFuncError('create856FromRoseRocket - GetOrderWithSSCC18', err)
+                    );
+            })
+            .catch(err => util.printFuncError('create856FromRoseRocket - Auth', err));
+        util.quickResponse(res);
+        return;
+    } catch (error) {
+        util.printFuncError('create856FromRoseRocket', error); // print call stack
         return next({ error: error.toString() });
     }
 }
@@ -88,19 +199,19 @@ export function create204FromRoseRocket(req, res, next) {
 export function processInboundEDIFile(ediFile, ediType) {
     try {
         console.log(`Attempting to process local inbound file: ${ediFile}...`);
-        const { data = {}, error } = readLocalFile(ediFile, true);
+        const { data = {}, error } = util.readLocalFile(ediFile, true);
         if (error) {
-            printFuncError('processInboundLocalFile', error); // print call stack
+            util.printFuncError('processInboundLocalFile', error); // print call stack
             return;
         }
         parseEDI(ediType, data)
             .then(function(res) {
-                const { filePath = '', tmpPath = '' } = generateFileNames(ediType);
+                const { filePath = '', tmpPath = '' } = util.generateFileNames(ediType);
                 sendAndBackupFile(res, filePath, tmpPath, true);
             })
-            .catch(err => printFuncError('processInboundLocalFile', err));
+            .catch(err => util.printFuncError('processInboundLocalFile', err));
     } catch (error) {
-        printFuncError('processInboundLocalFile', error); // print call stack
+        util.printFuncError('processInboundLocalFile', error); // print call stack
         return;
     }
 }
@@ -110,19 +221,19 @@ export function processInboundEDIFile(ediFile, ediType) {
 export function processOutboundDataFile(dataFile, ediType) {
     try {
         console.log(`Attempting to process local outbound file: ${dataFile}...`);
-        const { data = {}, error } = readLocalJsonFile(dataFile);
+        const { data = {}, error } = util.readLocalJsonFile(dataFile);
         if (error) {
-            printFuncError('processOutboundLocalFile', error); // print call stack
+            util.printFuncError('processOutboundLocalFile', error); // print call stack
             return;
         }
         generateEDI(ediType, data)
             .then(function(res = {}) {
-                const { filePath = '', tmpPath = '' } = generateFileNames(ediType, true);
+                const { filePath = '', tmpPath = '' } = util.generateFileNames(ediType, true);
                 sendAndBackupFile(res, filePath, tmpPath);
             })
-            .catch(err => printFuncError('processOutboundLocalFile', err));
+            .catch(err => util.printFuncError('processOutboundLocalFile', err));
     } catch (error) {
-        printFuncError('processOutboundLocalFile', error); // print call stack
+        util.printFuncError('processOutboundLocalFile', error); // print call stack
         return;
     }
 }
@@ -152,9 +263,12 @@ export function processInboundFiles() {
                     timedFileProcess(files);
                 }, PROCESS_DELAY);
             })
-            .catch(err => printFuncError('processInboundFiles', err));
+            .catch(err =>
+                util.printFuncError('processInboundFiles - retrieveInboundFiles.catch', err)
+            );
+        return;
     } catch (error) {
-        printFuncError('processInboundFiles', error); // print call stack
+        util.printFuncError('processInboundFiles - Server Error', error); // print call stack
         return;
     }
 }
@@ -168,17 +282,21 @@ export function timedFileProcess(files = {}) {
         return;
     }
     const file = files.shift();
-    const fileTypes = [EDI_TYPES['990'], EDI_TYPES['214']];
-    for (const fileType of fileTypes)
-        if (file.includes(`${fileType}_`)) {
-            markFileAsProcessing(file)
-                .then(res => {
-                    processFile(file, fileType);
-                })
-                .catch(err => {
-                    markFileAsError(file, `timedFileProcess - ${file} - error`, err, true);
-                });
-        }
+    const fileContent = fs.readFileSync(`${LOCAL_SYNC_DIRECTORY}/${file}`, 'utf8');
+
+    // SEARCH FILE FOR EDI CONTEXT
+    let ediType = `${fileContent.match(EDI_TYPE_SEARCH)}`.replace(/\D/g, '');
+    const fileTypes = [EDI_TYPES['997'], EDI_TYPES['864']];
+    if (ediType != '' && fileTypes.includes(ediType)) {
+        util.printFuncLog('FileTypeMatch:', { ediType, file });
+        markFileAsProcessing(file)
+            .then(res => {
+                processFile(file, ediType);
+            })
+            .catch(err => {
+                markFileAsError(file, `timedFileProcess - ${file} - error`, err, true);
+            });
+    }
     setTimeout(function() {
         timedFileProcess(files);
     }, PROCESS_DELAY);
@@ -200,8 +318,8 @@ export function processFile(file, ediType) {
                     if (!groups.length) {
                         markFileAsError(
                             file,
-                            `processFile - ${ediType} - Order Data Missing`,
-                            `Order Data Missing`,
+                            `processFile - ${ediType} - Message Data Missing`,
+                            `Message Data Missing`,
                             true
                         );
                         return;
@@ -215,13 +333,40 @@ export function processFile(file, ediType) {
                             switch (ediType) {
                                 case EDI_TYPES['990']:
                                     updateOrderExternalID(order).catch(err =>
-                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                        markFileAsError(
+                                            file,
+                                            `processFile - updateOrderExternalID - ${ediType}`,
+                                            err
+                                        )
                                     );
                                     break;
 
                                 case EDI_TYPES['214']:
                                     updateOrderStatus(order).catch(err =>
-                                        markFileAsError(file, `processFile - ${ediType}`, err)
+                                        markFileAsError(
+                                            file,
+                                            `processFile - updateOrderStatus - ${ediType}`,
+                                            err
+                                        )
+                                    );
+                                    break;
+
+                                case EDI_TYPES['997']:
+                                    acknowledgeASN(order).catch(err =>
+                                        markFileAsError(
+                                            file,
+                                            `processFile - acknowledgeASN - ${ediType}`,
+                                            err
+                                        )
+                                    );
+                                    break;
+                                case EDI_TYPES['864']:
+                                    markASNasError(order, file).catch(err =>
+                                        markFileAsError(
+                                            file,
+                                            `processFile - acknowledgeASN - ${ediType}`,
+                                            err
+                                        )
                                     );
                                     break;
                             }
@@ -230,12 +375,12 @@ export function processFile(file, ediType) {
                     markFileAsSuccess(file);
                 })
                 .catch(err => {
-                    printFuncError('processFiles', err); // print call stack
+                    util.printFuncError('processFiles', err); // print call stack
                     markFileAsError(file, `processFile - ${ediType} - parseEDI error`, error, true);
                     return;
                 });
         } catch (err) {
-            printFuncError('processFiles', err); // print call stack
+            util.printFuncError('processFiles', err); // print call stack
             markFileAsError(file, `processFile - ${ediType}`, err, true);
             return;
         }
@@ -287,7 +432,7 @@ export function updateOrderStatus(orderData = {}) {
         const { status_code: orderStatus } = orderData;
         //Don't continue if the status is not within the confines of what we've agreed to support
         if (!(Object.values(SUPPORTED_ORDER_STATUSES).indexOf(orderStatus) > -1)) {
-            printFuncWarning(
+            util.printFuncWarning(
                 'updateOrderStatus',
                 `Order Change status not supported -- OrderID: ${
                     orderData.full_id
@@ -341,7 +486,11 @@ export function updateOrderStatus(orderData = {}) {
 export function markFileAsProcessing(file) {
     return new Promise((resolve, reject) => {
         const localFilePath = `${LOCAL_SYNC_DIRECTORY}/processing/${file}`;
-        let err = localFileMove(LOCAL_SYNC_DIRECTORY, `${LOCAL_SYNC_DIRECTORY}/processing`, file);
+        let err = util.localFileMove(
+            LOCAL_SYNC_DIRECTORY,
+            `${LOCAL_SYNC_DIRECTORY}/processing`,
+            file
+        );
         if (err) {
             reject(err);
         }
@@ -362,11 +511,21 @@ export function markFileAsProcessing(file) {
                     .then(resolve)
                     .catch(reject);
                 return;
+            case 'SFTP':
+                sftp.markFileAsProcessing(localFilePath, file)
+                    .then(resolve)
+                    .catch(reject);
+                return;
+            case 'FTP':
+                ftp.markFileAsProcessing(localFilePath, file)
+                    .then(resolve)
+                    .catch(reject);
+                return;
             default:
                 try {
                     // to copy the markFileAsProcessing feature, after moving the file we make a copy in the
                     // "FILE_IN" directory
-                    let err = localFileMove(
+                    let err = util.localFileMove(
                         `${LOCAL_SYNC_DIRECTORY}/processing`,
                         `${FILE_IN}/processing`,
                         file,
@@ -384,14 +543,217 @@ export function markFileAsProcessing(file) {
 }
 // Maintain a local backup of succesfully processed files. Remove if necessary
 export function markFileAsSuccess(fileName) {
-    localFileMove(`${LOCAL_SYNC_DIRECTORY}/processing`, `${DOWNLOAD_SUCCESS_DIR}`, fileName, true);
+    util.localFileMove(
+        `${LOCAL_SYNC_DIRECTORY}/processing`,
+        `${DOWNLOAD_SUCCESS_DIR}`,
+        fileName,
+        true
+    );
 }
 
 // Maintain a local backup of files that were succesfully marked as processing but encountered an error
 export function markFileAsError(fileName, functionName, msg, verbose) {
-    if (verbose) {
-        printFuncError(functionName, msg);
+    if (verbose || true) {
+        util.printFuncError(functionName, msg);
     }
-    printFuncError(functionName, `Error Updating from file -- ${fileName}`);
-    localFileMove(`${LOCAL_SYNC_DIRECTORY}/processing`, `${DOWNLOAD_ERROR_DIR}`, fileName, true);
+    util.printFuncError(functionName, `Error Updating from file -- ${fileName}`);
+    util.localFileMove(
+        `${LOCAL_SYNC_DIRECTORY}/processing`,
+        `${DOWNLOAD_ERROR_DIR}`,
+        fileName,
+        true
+    );
+}
+
+// acknowledgeASN will load the associated ASN and respond with the appropriate
+export function acknowledgeASN(ediData) {
+    return new Promise((resolve, reject) => {
+        const gcnId = util.trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+
+                authToken = res1.access_token;
+                ediOutHelpers
+                    .loadEDITransaction(authToken, gcnId, res1.orgId)
+                    .then(function(res2) {
+                        const { edi_group: ediGroup = {} } = res2;
+
+                        authToken = res2.authToken;
+                        ediGroup.response_status =
+                            EDI_997_STATUS_TYPES[ediData.gcn_status.toUpperCase()];
+
+                        for (const r of ediData.responses) {
+                            ediGroup.orders
+                                .filter(
+                                    o =>
+                                        o.transaction_set_number ==
+                                        util.trimLeadingZeroes(`${r.tsn_id}`)
+                                )
+                                .forEach(function(e) {
+                                    const responseCode = r.response_code.toUpperCase();
+                                    e.response_status = EDI_997_STATUS_TYPES[responseCode];
+                                    e.message = EDI_997_STATUS_DEFAULT_MESSAGES[responseCode];
+                                });
+                        }
+                        rrapi
+                            .updateEDITransactionData(authToken, ediGroup)
+                            .then(resolve)
+                            .catch(reject);
+                    })
+                    .catch(reject);
+            })
+            .catch(reject);
+    });
+}
+
+// markASNasError will process a file that's been identified as an 867 and attempt to update Roserocket
+// with the status changes.  This includes marking the order as rejected and including the message
+// within the internal notes of the order
+export function markASNasError(ediData, file) {
+    return new Promise((resolve, reject) => {
+        const gcnId = util.trimLeadingZeroes(`${ediData.gcn_id}`);
+        if (gcnId == '') {
+            reject('Could not load GroupControlID');
+        }
+
+        //typicaly pattern: Auth -> LoadByExternalID -> ReviseByID
+        let authToken;
+        rrAuthenticate()
+            .then(function(res1 = {}) {
+                if (!res1.access_token) {
+                    reject('Authorization Failed - Check Org credentials in environment settings.');
+                    return;
+                }
+
+                authToken = res1.access_token;
+
+                //consume message data and determine which lines can be evaluated for proper execution
+                let actionableLines = [];
+                for (const mit of ediData.messages) {
+                    let startAdding = false;
+                    for (const line of mit.lines) {
+                        if (line.message.match(EDI_ERROR_ASN_START)) {
+                            startAdding = true;
+                            continue;
+                        }
+                        if (startAdding) {
+                            const ids = `${line.message.match(EDI_ERROR_ASN_MSG_PARSE)}`.split(' ');
+                            const message = line.message.replace(EDI_ERROR_ASN_MSG_PARSE, '');
+                            actionableLines.push({
+                                gcnId: util.trimLeadingZeroes(ids[0]),
+                                errorCode: ids[1],
+                                message,
+                            });
+                        }
+                    }
+                }
+
+                // run the update code for any actionable lines; make sure each execution can flag file
+                // as having encounterd an error
+                for (const errMessage of actionableLines) {
+                    ediOutHelpers
+                        .loadEDITransaction(authToken, errMessage.gcnId, res1.orgId)
+                        .then(function(res2) {
+                            const { edi_group: ediGroup = {} } = res2;
+
+                            authToken = res2.authToken;
+                            ediGroup.orders.forEach(function(e) {
+                                e.response_status = EDI_997_STATUS_TYPES['R'];
+                                e.message = `${
+                                    EDI_867_ERROR_CODES[errMessage.errorCode]
+                                } \nDetails:${errMessage.message} \n${file}`;
+                            });
+                            rrapi.updateEDITransactionData(authToken, ediGroup).catch(reject);
+                        })
+                        .catch(err => {
+                            markFileAsError(file, `markASNasError - loadEDITransaciton - 867`, err);
+                        });
+                }
+
+                resolve({ success: true });
+            })
+            .catch(reject);
+    });
+}
+
+// sendAndBackupFile will determine what to to do with the result from the EDI Playground.
+export function sendAndBackupFile(res, filePath, tmpPath, jsonData = false) {
+    // The following will trim the ^M special carriage return at the end of file. Did a fair amount
+    // of searching, only this method was working consistently to remove this value
+    let content = jsonData
+        ? JSON.stringify(res.result.replace(/[\x00-\x1F\x7F-\x9F]$/g, ''))
+        : res.result.replace(/\r/g, '');
+   //content = content.replace(/$/g,'\n'); 
+
+    // Create temporary file at tmpPath; local copy is required for certain upload types
+    let err = util.writeStringResultToFile(content, tmpPath);
+    if (err) {
+        util.printFuncError('processOutboundLocalFile', err.toString()); // print call stack
+        util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+        return err;
+    }
+
+    switch (uploadAction) {
+        case 'AWS':
+            aws.fileCopy(tmpPath, AWS_OUT_ENDPOINT).catch(error => {
+                err = error;
+            });
+            break;
+        case 'SFTP':
+            sftp.fileCopy(tmpPath, SFTP_OUT_ENDPOINT).catch(error => {
+                util.printFuncError('sendAndBackupFile - AFTER', error); // print call stack
+                util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+            });
+            return;
+        case 'FTP':
+            ftp.fileCopy(tmpPath, FTP_OUT_ENDPOINT).catch(error => {
+                util.printFuncError('sendAndBackupFile - AFTER', error); // print call stack
+                util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+            });
+            return;
+        default:
+            err = util.writeStringResultToFile(content, filePath);
+            break;
+    }
+
+    // If upload action fails, log error, backup file, and return err
+    if (err) {
+        util.printFuncError('processOutboundLocalFile', err.toString()); // print call stack
+        util.localFileBackup(tmpPath, { isError: true, pr: 'upload_error_' });
+        return err;
+    }
+    return;
+}
+
+// retrieveInboundFiles will get new EDI files from the configured source to the local sync directory,
+// even if they're local data files.
+export function retrieveInboundFiles() {
+    switch (downloadAction) {
+        case 'AWS':
+            return aws.fileSync(AWS_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY, false);
+        case 'SFTP':
+            return sftp.fileSyncFromSFTP(SFTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
+        case 'FTP':
+            return ftp.fileSyncFromFTP(FTP_IN_ENDPOINT, LOCAL_SYNC_DIRECTORY);
+        default:
+            return new Promise((resolve, reject) => {
+                try {
+                    util.syncLocalFilesToBeProcessed(FILE_IN, LOCAL_SYNC_DIRECTORY);
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            });
+            util.printFuncError(functionName, msg);
+    }
 }
