@@ -36,7 +36,7 @@
         "dotenv": "4.0.0",
         "eslint-plugin-import": "2.16.0",
         "eslint-plugin-jsx-a11y": "6.2.1",
-        "express": "4.16.2",
+        "express": "4.17.3",
         "express-handlebars": "3.0.0",
         "express-unless": "0.3.0",
         "jest-plugins": "2.9.0",
