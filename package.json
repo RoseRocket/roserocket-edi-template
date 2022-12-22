@@ -40,7 +40,7 @@
         "express-handlebars": "3.0.0",
         "express-unless": "0.3.0",
         "jest-plugins": "2.9.0",
-        "jsonwebtoken": "8.1.0",
+        "jsonwebtoken": "9.0.0",
         "less": "2.7.1",
         "less-plugin-clean-css": "1.5.1",
         "mkdirp": "0.5.1",
